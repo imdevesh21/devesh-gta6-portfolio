@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
-import { PortfolioData, SkillWeapon, ExperienceItem, ProjectItem, CertificationItem } from "@/types/portfolio";
+import { PortfolioData, SkillWeapon, ExperienceItem, ProjectItem, CertificationItem, AnalyticsSummary, VisitorLog } from "@/types/portfolio";
 import { sfx } from "@/lib/soundFx";
 import Link from "next/link";
 import { 
@@ -22,7 +22,17 @@ import {
   Sparkles, 
   Award, 
   BookOpen,
-  Lock
+  Lock,
+  Activity,
+  BarChart3,
+  Globe,
+  Users,
+  Calendar,
+  Smartphone,
+  Laptop,
+  RefreshCw,
+  FileSpreadsheet,
+  Search
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -40,6 +50,64 @@ export default function AdminPage() {
   const [pinError, setPinError] = useState<string>("");
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [shakeLock, setShakeLock] = useState<boolean>(false);
+
+  // Analytics & Visitor Telemetry State
+  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>("2026-11");
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
+  const [logSearchQuery, setLogSearchQuery] = useState<string>("");
+  const [hoveredDay, setHoveredDay] = useState<{ day: string; date: string; count: number } | null>(null);
+
+  const fetchAnalytics = async (monthToFetch?: string) => {
+    setIsLoadingAnalytics(true);
+    try {
+      const m = monthToFetch || selectedMonth;
+      const res = await fetch(`/api/analytics?month=${m}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.summary) {
+          setAnalytics(json.summary);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err);
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAnalytics(selectedMonth);
+    }
+  }, [isAuthenticated, selectedMonth]);
+
+  const exportLogsCsv = () => {
+    if (!analytics || !analytics.recentLogs || analytics.recentLogs.length === 0) return;
+    sfx.playClick();
+    const headers = ["Timestamp", "Date", "Time", "Country", "City", "Device", "OS", "Browser", "Referrer", "Visitor_ID", "Status"];
+    const rows = analytics.recentLogs.map((l: VisitorLog) => [
+      new Date(l.timestamp).toISOString(),
+      l.date,
+      l.time,
+      l.country,
+      l.city,
+      l.device,
+      l.os,
+      l.browser,
+      l.referrer,
+      l.visitorId,
+      l.isNew ? "New Visitor" : "Returning Operative"
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.map(val => `"${val}"`).join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Leonida_Visitor_Logs_${selectedMonth}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
 
   // Sync with initialData once loaded and check session auth
   useEffect(() => {
@@ -684,6 +752,29 @@ export default function AdminPage() {
               <BookOpen className="w-4 h-4" />
               <span>Coursework Tags ({formData.profile.coursework ? formData.profile.coursework.length : 0})</span>
             </button>
+
+            {/* Surveillance Radar / Visitor Telemetry */}
+            <div className="pt-2 border-t border-gray-800">
+              <button
+                onClick={() => {
+                  setActiveSection("surveillance");
+                  sfx.playClick();
+                }}
+                className={`w-full px-3 py-2.5 rounded-xl font-bold flex items-center justify-between gap-2 transition-all ${
+                  activeSection === "surveillance"
+                    ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.5)] scale-[1.02]"
+                    : "bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 animate-pulse text-emerald-400" />
+                  <span>Visitor Radar Log</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-emerald-300 border border-emerald-500/30">
+                  {analytics ? `${analytics.totalVisits} LOGS` : "LIVE"}
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Quick Summary Pill */}
@@ -1530,6 +1621,483 @@ export default function AdminPage() {
                     </div>
                   ))}
               </div>
+            </div>
+          )}
+
+          {/* TAB 8: SURVEILLANCE RADAR & VISITOR TELEMETRY */}
+          {activeSection === "surveillance" && (
+            <div className="bg-[#140124] border border-emerald-500/50 p-6 rounded-2xl space-y-6 shadow-xl animate-fadeIn">
+              
+              {/* Header & Controls */}
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-emerald-400 animate-pulse" />
+                    <h2 className="text-xl font-black text-white tracking-wide">
+                      LEONIDA SURVEILLANCE RADAR // VISITOR TELEMETRY
+                    </h2>
+                  </div>
+                  <p className="text-xs font-mono text-gray-400 mt-1">
+                    Real-time reconnaissance, monthly date breakdown & ingress intelligence.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 font-mono text-xs">
+                  <button
+                    onClick={() => fetchAnalytics()}
+                    disabled={isLoadingAnalytics}
+                    className="px-3 py-1.5 rounded-lg bg-black/60 border border-emerald-500/50 hover:bg-emerald-950 text-emerald-300 hover:text-white flex items-center gap-1.5 transition-all disabled:opacity-50"
+                    title="Refresh analytics data"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingAnalytics ? "animate-spin" : ""}`} />
+                    <span>{isLoadingAnalytics ? "Scanning..." : "Re-Scan Radar"}</span>
+                  </button>
+
+                  <button
+                    onClick={exportLogsCsv}
+                    className="px-3 py-1.5 rounded-lg bg-black/60 border border-[#00f0ff]/50 hover:bg-cyan-950 text-[#00f0ff] hover:text-white flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(0,240,255,0.25)]"
+                    title="Download visitor logs as CSV file"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Month Selector Bar */}
+              <div className="bg-black/50 p-3.5 rounded-xl border border-gray-800 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+                <div className="flex items-center gap-2 text-gray-400">
+                  <Calendar className="w-4 h-4 text-emerald-400" />
+                  <span className="font-bold">SELECT SURVEILLANCE MONTH:</span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const months = analytics?.monthlyBreakdown
+                      ? Array.from(new Set(["2026-11", "2026-10", ...Object.keys(analytics.monthlyBreakdown)])).sort().reverse()
+                      : ["2026-11", "2026-10"];
+
+                    return months.map((m) => {
+                      const [yr, mn] = m.split("-");
+                      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                      const label = `${monthNames[parseInt(mn, 10) - 1]} ${yr}`;
+                      const isSelected = selectedMonth === m;
+
+                      return (
+                        <button
+                          key={m}
+                          onClick={() => {
+                            setSelectedMonth(m);
+                            sfx.playClick();
+                          }}
+                          className={`px-3 py-1 rounded-lg transition-all font-bold ${
+                            isSelected
+                              ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-black shadow-[0_0_12px_rgba(16,185,129,0.5)] scale-105"
+                              : "bg-black/70 border border-gray-700 text-gray-300 hover:border-emerald-400 hover:text-white"
+                          }`}
+                        >
+                          {label} ({analytics?.monthlyBreakdown?.[m] || 0})
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* 4 High-Priority Metrics Counter Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
+                {/* Total All-Time Visits */}
+                <div className="p-4 bg-black/70 rounded-xl border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)] space-y-1">
+                  <div className="flex items-center justify-between text-gray-400 text-[10px] uppercase font-bold">
+                    <span>ALL-TIME VISITS</span>
+                    <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-black text-emerald-400 tracking-wider">
+                    {analytics?.totalVisits || 0}
+                  </div>
+                  <div className="text-[10px] text-gray-400">Total Ingress Events</div>
+                </div>
+
+                {/* Unique Visitors */}
+                <div className="p-4 bg-black/70 rounded-xl border border-[#00f0ff]/40 shadow-[0_0_15px_rgba(0,240,255,0.15)] space-y-1">
+                  <div className="flex items-center justify-between text-gray-400 text-[10px] uppercase font-bold">
+                    <span>UNIQUE OPERATIVES</span>
+                    <Users className="w-3.5 h-3.5 text-[#00f0ff]" />
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-black text-[#00f0ff] tracking-wider">
+                    {analytics?.uniqueVisitors || 0}
+                  </div>
+                  <div className="text-[10px] text-gray-400">Distinct Devices / IPs</div>
+                </div>
+
+                {/* Selected Month Visits */}
+                <div className="p-4 bg-black/70 rounded-xl border border-[#ff2a85]/40 shadow-[0_0_15px_rgba(255,42,133,0.15)] space-y-1">
+                  <div className="flex items-center justify-between text-gray-400 text-[10px] uppercase font-bold">
+                    <span>THIS MONTH</span>
+                    <BarChart3 className="w-3.5 h-3.5 text-[#ff2a85]" />
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-black text-[#ff2a85] tracking-wider">
+                    {analytics?.monthVisits || 0}
+                  </div>
+                  <div className="text-[10px] text-gray-400">In {selectedMonth}</div>
+                </div>
+
+                {/* Today's Visits */}
+                <div className="p-4 bg-black/70 rounded-xl border border-[#ffb700]/40 shadow-[0_0_15px_rgba(255,183,0,0.15)] space-y-1">
+                  <div className="flex items-center justify-between text-gray-400 text-[10px] uppercase font-bold">
+                    <span>{"TODAY'S INTEL"}</span>
+                    <Activity className="w-3.5 h-3.5 text-[#ffb700]" />
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-black text-[#ffb700] tracking-wider">
+                    {analytics?.todayVisits || 0}
+                  </div>
+                  <div className="text-[10px] text-gray-400">24-Hour Cycle</div>
+                </div>
+              </div>
+
+              {/* DAILY HISTOGRAM / BAR CHART (Every Date of Selected Month) */}
+              <div className="bg-black/80 p-5 rounded-2xl border border-gray-800 space-y-3 font-mono">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-emerald-400" />
+                      <span>DAILY VISITOR HISTOGRAM // {selectedMonth}</span>
+                    </h3>
+                    <p className="text-[11px] text-gray-400">
+                      Day-by-day frequency breakdown for all dates in the selected month.
+                    </p>
+                  </div>
+
+                  {hoveredDay && (
+                    <div className="text-xs bg-emerald-950 border border-emerald-500/60 px-3 py-1 rounded-lg text-emerald-300 font-bold animate-fadeIn">
+                      📅 {hoveredDay.date}: <span className="text-white">{hoveredDay.count} Visits</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Histogram Bars Container */}
+                <div className="pt-6 pb-2">
+                  {(() => {
+                    const [y, m] = selectedMonth.split("-").map(Number);
+                    const totalDays = new Date(y, m, 0).getDate();
+                    const daysList = [];
+                    for (let i = 1; i <= totalDays; i++) {
+                      const dStr = i < 10 ? `0${i}` : `${i}`;
+                      const fullDate = `${selectedMonth}-${dStr}`;
+                      const count = analytics?.dailyBreakdown?.[fullDate] || 0;
+                      daysList.push({ day: dStr, date: fullDate, count });
+                    }
+                    const maxCount = Math.max(...daysList.map((d) => d.count), 1);
+                    const todayStr = new Date().toISOString().split("T")[0];
+
+                    return (
+                      <div className="flex items-end gap-1 sm:gap-1.5 h-44 w-full px-1 border-b border-gray-700">
+                        {daysList.map((item) => {
+                          const heightPct = item.count > 0 ? Math.max((item.count / maxCount) * 100, 10) : 4;
+                          const isToday = item.date === todayStr;
+
+                          return (
+                            <div
+                              key={item.day}
+                              onMouseEnter={() => setHoveredDay(item)}
+                              onMouseLeave={() => setHoveredDay(null)}
+                              className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer relative"
+                            >
+                              {/* Hover Tooltip */}
+                              <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-black border border-emerald-400 text-white text-[9px] px-2 py-0.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-30">
+                                {item.date}: {item.count}
+                              </div>
+
+                              {/* The Bar */}
+                              <div
+                                style={{ height: `${heightPct}%` }}
+                                className={`w-full rounded-t-sm transition-all duration-300 ${
+                                  item.count > 0
+                                    ? isToday
+                                      ? "bg-gradient-to-t from-emerald-500 via-cyan-400 to-[#ff2a85] shadow-[0_0_12px_rgba(0,240,255,0.8)] group-hover:brightness-125"
+                                      : "bg-gradient-to-t from-[#ff2a85] to-[#00f0ff] shadow-[0_0_8px_rgba(0,240,255,0.4)] group-hover:brightness-125"
+                                    : "bg-gray-800/60 group-hover:bg-gray-700"
+                                } ${isToday ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-black" : ""}`}
+                              />
+
+                              {/* Day Label */}
+                              <span className={`text-[9px] mt-1.5 ${isToday ? "text-emerald-400 font-bold" : "text-gray-500 group-hover:text-gray-300"}`}>
+                                {item.day}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1">
+                  <span>Day 01</span>
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center gap-1.5 text-cyan-400">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-[#00f0ff]" /> Regular Traffic
+                    </span>
+                    <span className="flex items-center gap-1.5 text-emerald-400">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" /> Active Date / Today
+                    </span>
+                  </div>
+                  <span>End of Month</span>
+                </div>
+              </div>
+
+              {/* Hardware & Referrer Intelligence Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+                
+                {/* Device Breakdown */}
+                <div className="p-4 bg-black/60 rounded-xl border border-gray-800 space-y-3">
+                  <div className="flex items-center justify-between text-gray-400 font-bold">
+                    <span>HARDWARE PLATFORMS</span>
+                    <Smartphone className="w-3.5 h-3.5 text-cyan-400" />
+                  </div>
+
+                  {(() => {
+                    const dev = analytics?.deviceBreakdown || { Desktop: 0, Mobile: 0, Tablet: 0 };
+                    const total = dev.Desktop + dev.Mobile + dev.Tablet || 1;
+                    const deskPct = Math.round((dev.Desktop / total) * 100);
+                    const mobPct = Math.round((dev.Mobile / total) * 100);
+                    const tabPct = Math.round((dev.Tablet / total) * 100);
+
+                    return (
+                      <div className="space-y-2.5">
+                        <div>
+                          <div className="flex justify-between text-[11px] mb-1">
+                            <span className="flex items-center gap-1.5 text-gray-300">
+                              <Laptop className="w-3.5 h-3.5 text-cyan-400" /> Desktop
+                            </span>
+                            <span className="text-cyan-400 font-bold">{dev.Desktop} ({deskPct}%)</span>
+                          </div>
+                          <div className="w-full bg-gray-900 h-1.5 rounded-full overflow-hidden">
+                            <div style={{ width: `${deskPct}%` }} className="h-full bg-cyan-400 shadow-[0_0_6px_#06b6d4]" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-[11px] mb-1">
+                            <span className="flex items-center gap-1.5 text-gray-300">
+                              <Smartphone className="w-3.5 h-3.5 text-pink-400" /> Mobile
+                            </span>
+                            <span className="text-pink-400 font-bold">{dev.Mobile} ({mobPct}%)</span>
+                          </div>
+                          <div className="w-full bg-gray-900 h-1.5 rounded-full overflow-hidden">
+                            <div style={{ width: `${mobPct}%` }} className="h-full bg-[#ff2a85] shadow-[0_0_6px_#ff2a85]" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-[11px] mb-1">
+                            <span className="flex items-center gap-1.5 text-gray-300">
+                              <Activity className="w-3.5 h-3.5 text-purple-400" /> Tablet
+                            </span>
+                            <span className="text-purple-400 font-bold">{dev.Tablet} ({tabPct}%)</span>
+                          </div>
+                          <div className="w-full bg-gray-900 h-1.5 rounded-full overflow-hidden">
+                            <div style={{ width: `${tabPct}%` }} className="h-full bg-purple-500 shadow-[0_0_6px_#a855f7]" />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Top Countries */}
+                <div className="p-4 bg-black/60 rounded-xl border border-gray-800 space-y-3">
+                  <div className="flex items-center justify-between text-gray-400 font-bold">
+                    <span>TOP OPERATIVE REGIONS</span>
+                    <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                    {analytics?.countryBreakdown && Object.entries(analytics.countryBreakdown).length > 0 ? (
+                      Object.entries(analytics.countryBreakdown)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([country, count]) => {
+                          let flag = "🌐";
+                          const cLower = country.toLowerCase();
+                          if (cLower.includes("india")) flag = "🇮🇳";
+                          else if (cLower.includes("united states") || cLower.includes("usa")) flag = "🇺🇸";
+                          else if (cLower.includes("germany")) flag = "🇩🇪";
+                          else if (cLower.includes("kingdom") || cLower.includes("uk")) flag = "🇬🇧";
+                          else if (cLower.includes("canada")) flag = "🇨🇦";
+                          else if (cLower.includes("netherlands")) flag = "🇳🇱";
+
+                          return (
+                            <div key={country} className="flex items-center justify-between p-1.5 bg-black/40 rounded-lg text-gray-200">
+                              <span className="flex items-center gap-2">
+                                <span>{flag}</span>
+                                <span>{country}</span>
+                              </span>
+                              <span className="text-emerald-400 font-bold">{count} visits</span>
+                            </div>
+                          );
+                        })
+                    ) : (
+                      <div className="text-gray-500 text-center py-4">No regional data yet</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Top Referral Ingress */}
+                <div className="p-4 bg-black/60 rounded-xl border border-gray-800 space-y-3">
+                  <div className="flex items-center justify-between text-gray-400 font-bold">
+                    <span>TRAFFIC CHANNELS</span>
+                    <Users className="w-3.5 h-3.5 text-amber-400" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {[
+                      { name: "LinkedIn", color: "text-[#00f0ff]", border: "border-cyan-500/40" },
+                      { name: "GitHub", color: "text-purple-400", border: "border-purple-500/40" },
+                      { name: "Direct Uplink", color: "text-emerald-400", border: "border-emerald-500/40" },
+                      { name: "Google Search", color: "text-amber-400", border: "border-amber-500/40" },
+                      { name: "Twitter / X", color: "text-[#ff2a85]", border: "border-pink-500/40" },
+                    ].map((channel) => {
+                      const count = analytics?.recentLogs
+                        ? analytics.recentLogs.filter((l) => l.referrer.toLowerCase().includes(channel.name.toLowerCase().split(" ")[0])).length
+                        : 0;
+
+                      return (
+                        <div key={channel.name} className={`flex items-center justify-between p-1.5 bg-black/40 rounded-lg border ${channel.border}`}>
+                          <span className={channel.color}>{channel.name}</span>
+                          <span className="font-bold text-white">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* DETAILED RECON LOGS STREAM (Table) */}
+              <div className="bg-black/80 rounded-2xl border border-gray-800 overflow-hidden font-mono text-xs">
+                
+                {/* Table Header & Search */}
+                <div className="p-4 bg-[#18022b]/80 border-b border-gray-800 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-emerald-400" />
+                    <span className="font-bold text-white tracking-wider">
+                      LIVE RECONNAISSANCE STREAM ({analytics?.recentLogs?.length || 0} LOGS)
+                    </span>
+                  </div>
+
+                  {/* Search Filter */}
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Filter by city, country, browser..."
+                      value={logSearchQuery}
+                      onChange={(e) => setLogSearchQuery(e.target.value)}
+                      className="w-full bg-black/60 border border-gray-700 rounded-lg pl-8 pr-3 py-1.5 text-white placeholder:text-gray-500 outline-none focus:border-emerald-400 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Table Records */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-gray-800 bg-black/40 text-[10px] text-gray-400 uppercase tracking-wider">
+                        <th className="py-2.5 px-4">TIMESTAMP</th>
+                        <th className="py-2.5 px-4">LOCATION</th>
+                        <th className="py-2.5 px-4">HARDWARE & OS</th>
+                        <th className="py-2.5 px-4">INGRESS CHANNEL</th>
+                        <th className="py-2.5 px-4">STATUS</th>
+                        <th className="py-2.5 px-4">OPERATIVE ID</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800/60">
+                      {(() => {
+                        const logsToDisplay = (analytics?.recentLogs || []).filter((l) => {
+                          if (!logSearchQuery.trim()) return true;
+                          const q = logSearchQuery.toLowerCase();
+                          return (
+                            l.city.toLowerCase().includes(q) ||
+                            l.country.toLowerCase().includes(q) ||
+                            l.browser.toLowerCase().includes(q) ||
+                            l.os.toLowerCase().includes(q) ||
+                            l.referrer.toLowerCase().includes(q) ||
+                            l.date.includes(q)
+                          );
+                        });
+
+                        if (logsToDisplay.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan={6} className="py-8 text-center text-gray-500">
+                                No reconnaissance telemetry found matching search filter.
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return logsToDisplay.slice(0, 30).map((log) => {
+                          let flag = "🌐";
+                          const cLower = log.country.toLowerCase();
+                          if (cLower.includes("india")) flag = "🇮🇳";
+                          else if (cLower.includes("united states") || cLower.includes("usa")) flag = "🇺🇸";
+                          else if (cLower.includes("germany")) flag = "🇩🇪";
+                          else if (cLower.includes("kingdom") || cLower.includes("uk")) flag = "🇬🇧";
+                          else if (cLower.includes("canada")) flag = "🇨🇦";
+                          else if (cLower.includes("netherlands")) flag = "🇳🇱";
+
+                          return (
+                            <tr key={log.id} className="hover:bg-white/5 transition-colors">
+                              <td className="py-2.5 px-4 text-gray-300">
+                                <div>{log.date}</div>
+                                <div className="text-[10px] text-gray-500">{log.time}</div>
+                              </td>
+
+                              <td className="py-2.5 px-4">
+                                <span className="flex items-center gap-1.5 font-bold text-white">
+                                  <span>{flag}</span>
+                                  <span>{log.city}, {log.country}</span>
+                                </span>
+                                <span className="text-[10px] text-gray-500">{log.ip}</span>
+                              </td>
+
+                              <td className="py-2.5 px-4 text-gray-300">
+                                <div>{log.os} / {log.browser}</div>
+                                <div className="text-[10px] text-cyan-400 font-bold">{log.device}</div>
+                              </td>
+
+                              <td className="py-2.5 px-4">
+                                <span className="px-2 py-0.5 rounded bg-black/60 border border-gray-700 text-gray-200">
+                                  {log.referrer}
+                                </span>
+                              </td>
+
+                              <td className="py-2.5 px-4">
+                                {log.isNew ? (
+                                  <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-bold text-[10px]">
+                                    NEW VISITOR
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 font-bold text-[10px]">
+                                    RETURNING
+                                  </span>
+                                )}
+                              </td>
+
+                              <td className="py-2.5 px-4 font-mono text-[10px] text-gray-400">
+                                {log.visitorId}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+
             </div>
           )}
 

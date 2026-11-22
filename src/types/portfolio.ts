@@ -87,3 +87,32 @@ export interface PortfolioData {
   projects: ProjectItem[];
   certifications: CertificationItem[];
 }
+
+export interface VisitorLog {
+  id: string;
+  timestamp: number;
+  date: string; // YYYY-MM-DD
+  month: string; // YYYY-MM
+  time: string; // HH:MM:SS
+  ip?: string;
+  country: string;
+  city: string;
+  device: 'Desktop' | 'Mobile' | 'Tablet';
+  browser: string;
+  os: string;
+  referrer: string;
+  visitorId: string;
+  isNew: boolean;
+}
+
+export interface AnalyticsSummary {
+  totalVisits: number;
+  uniqueVisitors: number;
+  monthVisits: number;
+  todayVisits: number;
+  dailyBreakdown: { [date: string]: number };
+  monthlyBreakdown: { [month: string]: number };
+  deviceBreakdown: { Desktop: number; Mobile: number; Tablet: number };
+  countryBreakdown: { [country: string]: number };
+  recentLogs: VisitorLog[];
+}
