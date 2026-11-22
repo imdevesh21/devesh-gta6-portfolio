@@ -48,3 +48,42 @@ export interface CertificationItem {
   description: string;
   badgeUrl?: string;
 }
+
+export interface OperativeProfile {
+  name: string;
+  codename: string;
+  title: string;
+  wantedLevel: number;
+  bounty: string;
+  location: string;
+  coordinates: string;
+  contact: {
+    phone: string;
+    email: string;
+    linkedin: string;
+    github: string;
+    portfolio: string;
+  };
+  education: {
+    institution: string;
+    degree: string;
+    period: string;
+    cgpa: string;
+  };
+  summary: string;
+  vitals: {
+    healthLabel: string;
+    healthVal: number;
+    armorLabel: string;
+    armorVal: number;
+  };
+  coursework: string[];
+}
+
+export interface PortfolioData {
+  profile: OperativeProfile;
+  skills: SkillWeapon[];
+  experiences: ExperienceItem[];
+  projects: ProjectItem[];
+  certifications: CertificationItem[];
+}

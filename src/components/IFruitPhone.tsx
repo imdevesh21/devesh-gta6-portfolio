@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { OPERATIVE_PROFILE } from "../data/portfolioData";
+import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Phone, Mail, Radio, MessageSquare, ChevronDown } from "lucide-react";
+import { Phone, Mail, Radio, MessageSquare, ChevronDown, Settings } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./Icons";
+import Link from "next/link";
 
 interface IFruitPhoneProps {
   isOpen: boolean;
@@ -12,6 +13,9 @@ interface IFruitPhoneProps {
 }
 
 export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) => {
+  const { data } = usePortfolio();
+  const profile = data.profile;
+
   const [time, setTime] = useState("20:25");
   const [isRadioOn, setIsRadioOn] = useState(false);
 
@@ -90,7 +94,7 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) =>
           <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
             {/* Phone Call */}
             <a
-              href={`tel:${OPERATIVE_PROFILE.contact.phone}`}
+              href={`tel:${profile.contact.phone}`}
               onClick={() => sfx.playPhone()}
               className="p-2.5 bg-emerald-950/60 border border-emerald-500/50 rounded-2xl hover:bg-emerald-900/60 transition-all flex flex-col items-center justify-center gap-1 group"
             >
@@ -100,7 +104,7 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) =>
 
             {/* Email */}
             <a
-              href={`mailto:${OPERATIVE_PROFILE.contact.email}`}
+              href={`mailto:${profile.contact.email}`}
               onClick={() => sfx.playClick()}
               className="p-2.5 bg-pink-950/60 border border-pink-500/50 rounded-2xl hover:bg-pink-900/60 transition-all flex flex-col items-center justify-center gap-1 group"
             >
@@ -110,7 +114,7 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) =>
 
             {/* WhatsApp */}
             <a
-              href={`https://wa.me/917976063461`}
+              href={`https://wa.me/${profile.contact.phone.replace(/[^0-9]/g, "")}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => sfx.playClick()}
@@ -122,7 +126,7 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) =>
 
             {/* LinkedIn */}
             <a
-              href={OPERATIVE_PROFILE.contact.linkedin}
+              href={profile.contact.linkedin}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => sfx.playClick()}
@@ -134,7 +138,7 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) =>
 
             {/* GitHub */}
             <a
-              href={OPERATIVE_PROFILE.contact.github}
+              href={profile.contact.github}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => sfx.playClick()}
@@ -170,21 +174,30 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) =>
               OPERATIVE PROFILE CARD
             </div>
             <div className="text-white font-black text-sm">
-              {OPERATIVE_PROFILE.name}
+              {profile.name}
             </div>
             <div className="text-[#00f0ff] font-bold">
-              {OPERATIVE_PROFILE.contact.phone}
+              {profile.contact.phone}
             </div>
             <div className="text-[#ff2a85] break-all font-bold">
-              {OPERATIVE_PROFILE.contact.email}
+              {profile.contact.email}
             </div>
             <div className="text-gray-400 text-[11px]">
-              {OPERATIVE_PROFILE.location}
+              {profile.location}
             </div>
             <div className="text-emerald-400 text-[11px] pt-1 border-t border-gray-800">
               ⚡ Open to Full-Stack, Frontend & SDE Roles
             </div>
           </div>
+
+          {/* Admin Terminal Button */}
+          <Link
+            href="/admin"
+            className="w-full py-2 bg-purple-950/80 hover:bg-purple-900/90 text-purple-300 hover:text-white font-mono text-xs rounded-xl border border-purple-500/50 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all"
+          >
+            <Settings className="w-3.5 h-3.5 text-purple-400" />
+            <span>OPEN ADMIN TERMINAL ⚙️</span>
+          </Link>
 
           {/* Close Phone Bar */}
           <button

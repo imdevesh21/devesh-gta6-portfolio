@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PortfolioProvider } from "@/context/PortfolioContext";
 
 export const metadata: Metadata = {
   title: "Devesh Sharma // Full-Stack Architect [GTA-6 Portfolio]",
@@ -35,7 +36,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="antialiased bg-[#0c0119] text-white">
-        {children}
+        <PortfolioProvider>
+          {children}
+        </PortfolioProvider>
       </body>
     </html>
   );

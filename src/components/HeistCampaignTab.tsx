@@ -1,10 +1,13 @@
 "use client";
 
 import React from "react";
-import { HEIST_CAMPAIGNS } from "../data/portfolioData";
+import { usePortfolio } from "@/context/PortfolioContext";
 import { MapPin, Calendar, Zap, CheckCircle2, Clock } from "lucide-react";
 
 export const HeistCampaignTab: React.FC = () => {
+  const { data } = usePortfolio();
+  const heists = data.experiences;
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Title Header */}
@@ -19,7 +22,7 @@ export const HeistCampaignTab: React.FC = () => {
 
       {/* Heist Mission Cards */}
       <div className="space-y-5">
-        {HEIST_CAMPAIGNS.map((heist) => {
+        {heists.map((heist) => {
           const isInProgress = heist.status === "IN PROGRESS";
           const isTraining = heist.status === "TRAINING COMPLETED";
 

@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { OPERATIVE_PROFILE } from "../data/portfolioData";
+import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Volume2, VolumeX, Briefcase, ShieldAlert } from "lucide-react";
+import { Volume2, VolumeX, Briefcase, ShieldAlert, Settings } from "lucide-react";
 import { PalmTreeIcon } from "./Icons";
+import Link from "next/link";
 
 interface HUDProps {
   executiveMode: boolean;
@@ -12,9 +13,12 @@ interface HUDProps {
 }
 
 export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode }) => {
+  const { data } = usePortfolio();
+  const profile = data.profile;
+
   const [cash, setCash] = useState(1540890);
   const [isMuted, setIsMuted] = useState(false);
-  const [wantedStars, setWantedStars] = useState(5);
+  const [wantedStars, setWantedStars] = useState(profile.wantedLevel || 5);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,10 +54,10 @@ export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode }
             </span>
             <div className="leading-none">
               <h1 className="text-lg font-black tracking-widest text-white uppercase drop-shadow-[0_0_6px_#ff2a85]">
-                {OPERATIVE_PROFILE.name}
+                {profile.name}
               </h1>
               <span className="text-[10px] tracking-widest text-[#ff2a85] font-mono font-bold">
-                LEONIDA DIGITAL ZONE // FULL-STACK ARCHITECT
+                LEONIDA DIGITAL ZONE // {profile.title.toUpperCase()}
               </span>
             </div>
           </div>
@@ -84,23 +88,23 @@ export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode }
           {/* Health & Armor Status */}
           <div className="hidden lg:flex flex-col gap-1 w-36">
             <div className="flex items-center justify-between text-[9px] text-emerald-400 font-bold">
-              <span>HEALTH (UI/UX)</span>
-              <span>{OPERATIVE_PROFILE.vitals.healthVal}%</span>
+              <span>{profile.vitals.healthLabel || "HEALTH (UI/UX)"}</span>
+              <span>{profile.vitals.healthVal}%</span>
             </div>
             <div className="w-full bg-gray-900 h-1.5 rounded-full overflow-hidden border border-emerald-500/30">
               <div 
                 className="bg-emerald-500 h-full shadow-[0_0_8px_#10b981]" 
-                style={{ width: `${OPERATIVE_PROFILE.vitals.healthVal}%` }} 
+                style={{ width: `${profile.vitals.healthVal}%` }} 
               />
             </div>
             <div className="flex items-center justify-between text-[9px] text-cyan-400 font-bold">
-              <span>ARMOR (BACKEND)</span>
-              <span>{OPERATIVE_PROFILE.vitals.armorVal}%</span>
+              <span>{profile.vitals.armorLabel || "ARMOR (BACKEND)"}</span>
+              <span>{profile.vitals.armorVal}%</span>
             </div>
             <div className="w-full bg-gray-900 h-1.5 rounded-full overflow-hidden border border-cyan-500/30">
               <div 
                 className="bg-cyan-500 h-full shadow-[0_0_8px_#06b6d4]" 
-                style={{ width: `${OPERATIVE_PROFILE.vitals.armorVal}%` }} 
+                style={{ width: `${profile.vitals.armorVal}%` }} 
               />
             </div>
           </div>
@@ -121,6 +125,16 @@ export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode }
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-[#00f0ff]" />}
           </button>
+
+          {/* Admin Panel Quick Link */}
+          <Link
+            href="/admin"
+            className="px-2.5 py-1.5 rounded bg-black/80 border border-cyan-400/50 hover:border-cyan-300 text-cyan-300 hover:text-white font-bold text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,240,255,0.25)] hover:scale-105 transition-all"
+            title="Open Dynamic Admin Control Panel"
+          >
+            <Settings className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: "8s" }} />
+            <span className="hidden sm:inline">Admin Panel</span>
+          </Link>
 
           {/* Recruiter Executive Mode Toggle */}
           <button

@@ -31,9 +31,9 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-[#0c0119] text-white overflow-x-hidden selection:bg-[#ff2a85] selection:text-white">
-      
+
       {/* 1. Cinematic Intro Sequence */}
-      <CinematicIntro onComplete={() => {}} />
+      <CinematicIntro onComplete={() => { }} />
 
       {/* 2. Top Heads-Up Display (HUD) */}
       <HUD
@@ -47,7 +47,7 @@ export default function Home() {
       ) : (
         /* Full 3D AAA Vice City Experience */
         <div className="relative min-h-[calc(100vh-65px)]">
-          
+
           {/* 3. Three.js 3D WebGL Background Scene */}
           <ThreeCanvas activeTab={activeTab} />
 
@@ -56,7 +56,7 @@ export default function Home() {
 
           {/* 5. Main Hero Callout & Interactive Navigation Bar */}
           <div className="relative z-20 max-w-6xl mx-auto px-4 pt-6 pb-2">
-            
+
             {/* Quick Tactical Location Banner */}
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono mb-4 bg-black/60 backdrop-blur-md p-2.5 rounded-xl border border-gray-800">
               <div className="flex items-center gap-2 text-[#00f0ff]">
@@ -84,11 +84,10 @@ export default function Home() {
               <div className="flex items-center justify-between overflow-x-auto gap-1.5 no-scrollbar">
                 <button
                   onClick={() => handleTabChange("dossier")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${
-                    activeTab === "dossier"
+                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "dossier"
                       ? "bg-[#ff2a85] text-white shadow-[0_0_15px_#ff2a85] scale-102"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   <span>👤</span>
                   <span>Operative Dossier</span>
@@ -96,11 +95,10 @@ export default function Home() {
 
                 <button
                   onClick={() => handleTabChange("weapons")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${
-                    activeTab === "weapons"
+                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "weapons"
                       ? "bg-[#00f0ff] text-black shadow-[0_0_15px_#00f0ff] scale-102"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   <span>🔫</span>
                   <span>Weapon Wheel (Skills)</span>
@@ -108,11 +106,10 @@ export default function Home() {
 
                 <button
                   onClick={() => handleTabChange("campaign")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${
-                    activeTab === "campaign"
+                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "campaign"
                       ? "bg-[#ff2a85] text-white shadow-[0_0_15px_#ff2a85] scale-102"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   <span>🚁</span>
                   <span>Campaign Heists (Exp)</span>
@@ -120,11 +117,10 @@ export default function Home() {
 
                 <button
                   onClick={() => handleTabChange("contracts")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${
-                    activeTab === "contracts"
+                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "contracts"
                       ? "bg-[#00f0ff] text-black shadow-[0_0_15px_#00f0ff] scale-102"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   <span>💎</span>
                   <span>Bounty Contracts (Projects)</span>
@@ -132,11 +128,10 @@ export default function Home() {
 
                 <button
                   onClick={() => handleTabChange("trophies")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${
-                    activeTab === "trophies"
+                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "trophies"
                       ? "bg-[#ffb700] text-black shadow-[0_0_15px_#ffb700] scale-102"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   <span>🏆</span>
                   <span>Street Cred (Certs)</span>

@@ -1,11 +1,17 @@
 "use client";
 
 import React from "react";
-import { OPERATIVE_PROFILE, HEIST_CAMPAIGNS, CONTRACT_PROJECTS, CERTIFICATIONS } from "../data/portfolioData";
+import { usePortfolio } from "@/context/PortfolioContext";
 import { Mail, Phone, ExternalLink, Printer } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./Icons";
 
 export const RecruiterExecutiveView: React.FC = () => {
+  const { data } = usePortfolio();
+  const profile = data.profile;
+  const experiences = data.experiences;
+  const projects = data.projects;
+  const certs = data.certifications;
+
   const handlePrint = () => {
     if (typeof window !== "undefined") {
       window.print();
@@ -18,10 +24,10 @@ export const RecruiterExecutiveView: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            {OPERATIVE_PROFILE.name}
+            {profile.name}
           </h1>
           <p className="text-base text-cyan-400 font-medium mt-1">
-            {OPERATIVE_PROFILE.title} • Next.js, Node.js, TypeScript, SQL
+            {profile.title} • Next.js, Node.js, TypeScript, SQL
           </p>
         </div>
 
@@ -37,21 +43,21 @@ export const RecruiterExecutiveView: React.FC = () => {
       {/* Contact & Links Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-slate-300 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
         <a
-          href={`mailto:${OPERATIVE_PROFILE.contact.email}`}
+          href={`mailto:${profile.contact.email}`}
           className="flex items-center gap-2 hover:text-cyan-400 transition-colors truncate"
         >
           <Mail className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-          <span className="truncate">{OPERATIVE_PROFILE.contact.email}</span>
+          <span className="truncate">{profile.contact.email}</span>
         </a>
         <a
-          href={`tel:${OPERATIVE_PROFILE.contact.phone}`}
+          href={`tel:${profile.contact.phone}`}
           className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
         >
           <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          <span>{OPERATIVE_PROFILE.contact.phone}</span>
+          <span>{profile.contact.phone}</span>
         </a>
         <a
-          href={OPERATIVE_PROFILE.contact.linkedin}
+          href={profile.contact.linkedin}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
@@ -60,7 +66,7 @@ export const RecruiterExecutiveView: React.FC = () => {
           <span>LinkedIn Profile</span>
         </a>
         <a
-          href={OPERATIVE_PROFILE.contact.github}
+          href={profile.contact.github}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
@@ -76,7 +82,7 @@ export const RecruiterExecutiveView: React.FC = () => {
           Executive Summary
         </h2>
         <p className="text-sm text-slate-300 leading-relaxed">
-          {OPERATIVE_PROFILE.summary}
+          {profile.summary}
         </p>
       </section>
 
@@ -86,7 +92,7 @@ export const RecruiterExecutiveView: React.FC = () => {
           Work Experience
         </h2>
         <div className="space-y-5">
-          {HEIST_CAMPAIGNS.map((exp) => (
+          {experiences.map((exp) => (
             <div key={exp.id} className="space-y-1.5">
               <div className="flex flex-wrap justify-between items-baseline gap-2">
                 <h3 className="text-base font-bold text-white">
@@ -122,7 +128,7 @@ export const RecruiterExecutiveView: React.FC = () => {
           Featured Engineering Projects
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {CONTRACT_PROJECTS.map((proj) => (
+          {projects.map((proj) => (
             <div
               key={proj.id}
               className="p-4 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between"
@@ -166,13 +172,13 @@ export const RecruiterExecutiveView: React.FC = () => {
           </h2>
           <div className="space-y-1">
             <h3 className="text-sm font-bold text-white">
-              {OPERATIVE_PROFILE.education.institution}
+              {profile.education.institution}
             </h3>
             <p className="text-xs text-slate-300">
-              {OPERATIVE_PROFILE.education.degree}
+              {profile.education.degree}
             </p>
             <p className="text-xs text-slate-400 font-mono">
-              {OPERATIVE_PROFILE.education.period} • CGPA: {OPERATIVE_PROFILE.education.cgpa}
+              {profile.education.period} • CGPA: {profile.education.cgpa}
             </p>
           </div>
         </section>
@@ -182,7 +188,7 @@ export const RecruiterExecutiveView: React.FC = () => {
             Certifications & Problem Solving
           </h2>
           <ul className="text-xs text-slate-300 space-y-1.5">
-            {CERTIFICATIONS.map((cert) => (
+            {certs.map((cert) => (
               <li key={cert.id} className="leading-snug">
                 <span className="font-bold text-white">{cert.title}</span> —{" "}
                 <span className="text-cyan-400 font-mono">{cert.status}</span>

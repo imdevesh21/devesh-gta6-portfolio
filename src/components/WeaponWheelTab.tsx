@@ -1,18 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
-import { WEAPON_SKILLS } from "../data/portfolioData";
+import React, { useState, useEffect } from "react";
+import { usePortfolio } from "@/context/PortfolioContext";
 import { SkillWeapon } from "../types/portfolio";
 import { sfx } from "../lib/soundFx";
 import { Crosshair, Zap, Target } from "lucide-react";
 
 export const WeaponWheelTab: React.FC = () => {
-  const [selectedWeapon, setSelectedWeapon] = useState<SkillWeapon>(WEAPON_SKILLS[0]);
+  const { data } = usePortfolio();
+  const weaponsList = data.skills;
+  const [selectedWeapon, setSelectedWeapon] = useState<SkillWeapon>(weaponsList[0] || {} as SkillWeapon);
+
+  useEffect(() => {
+    if (weaponsList.length > 0) {
+      setSelectedWeapon(weaponsList[0]);
+    }
+  }, [weaponsList]);
 
   const handleSelectWeapon = (weapon: SkillWeapon) => {
     sfx.playWeapon();
     setSelectedWeapon(weapon);
   };
+
+  if (!selectedWeapon || !selectedWeapon.name) {
+    return <div className="text-center font-mono text-gray-500 py-10">NO WEAPONS LOADED IN ARSENAL.</div>;
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -28,7 +40,7 @@ export const WeaponWheelTab: React.FC = () => {
 
       {/* Grid of Weapon Loadout Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {WEAPON_SKILLS.map((w) => {
+        {weaponsList.map((w) => {
           const isSelected = selectedWeapon.id === w.id;
           return (
             <div
@@ -44,13 +56,13 @@ export const WeaponWheelTab: React.FC = () => {
                 <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#ff2a85] animate-ping" />
               )}
               <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">
-                {w.icon}
+                {w.icon || "⚡"}
               </div>
               <div className="font-bold text-white text-xs tracking-wider">
                 {w.name}
               </div>
               <div className="text-[10px] font-mono text-gray-400 mt-1 truncate">
-                {w.weaponClass.split("//")[0]}
+                {w.weaponClass ? w.weaponClass.split("//")[0] : ""}
               </div>
             </div>
           );
@@ -62,7 +74,7 @@ export const WeaponWheelTab: React.FC = () => {
         {/* Left Column: Icon & Classification */}
         <div className="text-center md:border-r border-gray-800 md:pr-6 flex flex-col justify-center items-center">
           <div className="text-6xl mb-3 p-4 rounded-2xl bg-black/60 border border-gray-800 shadow-inner">
-            {selectedWeapon.icon}
+            {selectedWeapon.icon || "⚡"}
           </div>
           <h3 className="text-xl font-black text-white tracking-wide">
             {selectedWeapon.name}

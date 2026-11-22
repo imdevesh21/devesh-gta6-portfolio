@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CONTRACT_PROJECTS } from "../data/portfolioData";
+import { usePortfolio } from "@/context/PortfolioContext";
 import { ProjectItem } from "../types/portfolio";
 import { sfx } from "../lib/soundFx";
 import { ExternalLink, Sparkles } from "lucide-react";
@@ -12,6 +12,9 @@ interface ContractsTabProps {
 }
 
 export const ContractsTab: React.FC<ContractsTabProps> = ({ onInspectProject }) => {
+  const { data } = usePortfolio();
+  const projects = data.projects;
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Title Header */}
@@ -26,13 +29,13 @@ export const ContractsTab: React.FC<ContractsTabProps> = ({ onInspectProject }) 
 
       {/* Grid of Contracts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {CONTRACT_PROJECTS.map((project, idx) => (
+        {projects.map((project, idx) => (
           <div
             key={project.id}
             className={`bg-[#140124]/90 rounded-2xl p-6 border flex flex-col justify-between space-y-4 transition-all duration-300 hover:scale-102 ${
-              idx === 0
+              idx % 3 === 0
                 ? "border-[#ff2a85]/60 shadow-[0_0_25px_rgba(255,42,133,0.3)]"
-                : idx === 1
+                : idx % 3 === 1
                 ? "border-[#00f0ff]/60 shadow-[0_0_25px_rgba(0,240,255,0.3)]"
                 : "border-[#ffb700]/60 shadow-[0_0_25px_rgba(255,183,0,0.3)]"
             }`}

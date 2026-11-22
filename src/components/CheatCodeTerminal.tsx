@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { sfx } from "../lib/soundFx";
 import { Terminal, X, CornerDownLeft } from "lucide-react";
 import confetti from "canvas-confetti";
+import { useRouter } from "next/navigation";
 
 interface CheatCodeTerminalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CheatCodeTerminalProps {
 }
 
 export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, onClose }) => {
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([
     "LEONIDA KERNEL v6.0.21 [SECURE PROMPT READY]",
@@ -39,11 +41,21 @@ export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, on
     switch (cmd) {
       case "HELP":
         newLogs.push("AVAILABLE CHEAT CODES:");
+        newLogs.push("  ADMIN     - Hack security protocol & enter Admin Panel");
         newLogs.push("  LEETCODE  - Unlock 150+ DSA algorithmic firestorm");
         newLogs.push("  SPEED     - Activate 40-60% API latency boost");
         newLogs.push("  GODMODE   - Max out Operative Health & Armor (100%)");
         newLogs.push("  BOUNTY    - Grant $5,000,000 computational value");
         newLogs.push("  CLEAR     - Wipe terminal history");
+        break;
+
+      case "ADMIN":
+        newLogs.push(">>> OVERRIDE ACCEPTED: ACCESSING SECURE ADMIN TERMINAL...");
+        sfx.playWeapon();
+        setTimeout(() => {
+          onClose();
+          router.push("/admin");
+        }, 600);
         break;
 
       case "LEETCODE":
@@ -124,7 +136,7 @@ export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, on
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type cheat code (e.g. HELP, LEETCODE, SPEED)..."
+            placeholder="Type cheat code (e.g. ADMIN, HELP, LEETCODE, SPEED)..."
             className="flex-1 bg-transparent text-white outline-none placeholder:text-gray-600 font-mono"
             autoFocus
           />
