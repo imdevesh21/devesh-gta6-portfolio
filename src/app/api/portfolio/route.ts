@@ -19,6 +19,14 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const authPin = req.headers.get("x-admin-pin");
+    if (authPin !== "12487766") {
+      return NextResponse.json(
+        { error: "Unauthorized: Invalid FIB security clearance PIN" },
+        { status: 401 }
+      );
+    }
+
     const updatedData: PortfolioData = await req.json();
 
     if (!updatedData.profile || !updatedData.skills || !updatedData.experiences) {

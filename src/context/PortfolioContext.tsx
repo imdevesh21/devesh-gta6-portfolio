@@ -75,9 +75,13 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     try {
+      const pin = typeof window !== "undefined" ? sessionStorage.getItem("gta6_admin_pin") || "12487766" : "12487766";
       const res = await fetch("/api/portfolio", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-pin": pin
+        },
         body: JSON.stringify(updated),
       });
 

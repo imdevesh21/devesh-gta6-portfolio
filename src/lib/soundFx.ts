@@ -142,6 +142,33 @@ class SoundEffectsEngine {
     });
   }
 
+  public playWasted() {
+    if (this.isMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const notes = [160, 130, 95];
+    const now = this.ctx.currentTime;
+
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.7, now + idx * 0.12 + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      const start = now + idx * 0.12;
+      gain.gain.setValueAtTime(0.2, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.2);
+
+      osc.start(start);
+      osc.stop(start + 0.22);
+    });
+  }
+
   public toggleRadio(): boolean {
     if (this.isRadioPlaying) {
       this.stopRadio();

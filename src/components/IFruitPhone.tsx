@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Phone, Mail, Radio, MessageSquare, ChevronDown, Settings } from "lucide-react";
+import { Phone, Mail, Radio, MessageSquare, ChevronDown } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./Icons";
-import Link from "next/link";
 
 interface IFruitPhoneProps {
   isOpen: boolean;
@@ -189,15 +188,6 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) =>
               ⚡ Open to Full-Stack, Frontend & SDE Roles
             </div>
           </div>
-
-          {/* Admin Terminal Button */}
-          <Link
-            href="/admin"
-            className="w-full py-2 bg-purple-950/80 hover:bg-purple-900/90 text-purple-300 hover:text-white font-mono text-xs rounded-xl border border-purple-500/50 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all"
-          >
-            <Settings className="w-3.5 h-3.5 text-purple-400" />
-            <span>OPEN ADMIN TERMINAL ⚙️</span>
-          </Link>
 
           {/* Close Phone Bar */}
           <button

@@ -21,7 +21,8 @@ import {
   Briefcase, 
   Sparkles, 
   Award, 
-  BookOpen 
+  BookOpen,
+  Lock
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -32,12 +33,83 @@ export default function AdminPage() {
   const [saveStatus, setSaveStatus] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  // Sync with initialData once loaded
+  // Security PIN Authentication State
+  const MASTER_PIN = "12487766";
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [enteredPin, setEnteredPin] = useState<string>("");
+  const [pinError, setPinError] = useState<string>("");
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+  const [shakeLock, setShakeLock] = useState<boolean>(false);
+
+  // Sync with initialData once loaded and check session auth
+  useEffect(() => {
+    try {
+      const auth = sessionStorage.getItem("gta6_admin_auth");
+      if (auth === "true") {
+        setIsAuthenticated(true);
+      }
+    } catch {}
+    setIsCheckingAuth(false);
+  }, []);
+
   useEffect(() => {
     if (initialData && initialData.profile) {
       setFormData(initialData);
     }
   }, [initialData]);
+
+  const verifyPin = (pinToTest: string) => {
+    if (pinToTest === MASTER_PIN) {
+      sfx.playMissionPassed();
+      try {
+        sessionStorage.setItem("gta6_admin_auth", "true");
+        sessionStorage.setItem("gta6_admin_pin", MASTER_PIN);
+      } catch {}
+      setIsAuthenticated(true);
+      setPinError("");
+      try {
+        confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
+      } catch {}
+    } else {
+      sfx.playWasted();
+      setPinError("🚨 ACCESS DENIED: INVALID CLEARANCE PIN. FIB SURVEILLANCE ACTIVE.");
+      setShakeLock(true);
+      setTimeout(() => setShakeLock(false), 600);
+      setEnteredPin("");
+    }
+  };
+
+  const handleKeypadPress = (val: string) => {
+    sfx.playClick();
+    if (val === "CLEAR") {
+      setEnteredPin("");
+      setPinError("");
+      return;
+    }
+    if (enteredPin.length < 8) {
+      const next = enteredPin + val;
+      setEnteredPin(next);
+      if (next.length === 8) {
+        verifyPin(next);
+      }
+    }
+  };
+
+  const handlePinFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    verifyPin(enteredPin);
+  };
+
+  const handleLockVault = () => {
+    sfx.playBleep();
+    try {
+      sessionStorage.removeItem("gta6_admin_auth");
+      sessionStorage.removeItem("gta6_admin_pin");
+    } catch {}
+    setIsAuthenticated(false);
+    setEnteredPin("");
+    setPinError("");
+  };
 
   // Handle Save
   const handleSave = async () => {
@@ -295,6 +367,145 @@ export default function AdminPage() {
     }));
   };
 
+  // 1. Loading State while checking session auth
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[#0a0014] text-white flex items-center justify-center font-mono">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[#ff2a85] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-[#00f0ff] tracking-widest uppercase">INITIALIZING FIB CYBERVAULT...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. High-Security FIB Keypad Lock Gate
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#0a0014] text-white font-mono flex items-center justify-center p-4 relative overflow-hidden selection:bg-[#ff2a85]">
+        {/* Background Cyber Grid */}
+        <div 
+          className="absolute inset-0 opacity-15 pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(#ff2a85 1px, transparent 1px), radial-gradient(#00f0ff 1px, #0a0014 1px)",
+            backgroundSize: "40px 40px",
+            backgroundPosition: "0 0, 20px 20px",
+          }}
+        />
+
+        {/* Ambient Glows */}
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-pink-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-cyan-600/20 rounded-full blur-[120px] pointer-events-none" />
+
+        {/* Main Vault Terminal Card */}
+        <div className={`relative w-full max-w-md bg-[#120124]/95 border-2 ${shakeLock ? "border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.8)]" : "border-[#ff2a85]/70 shadow-[0_0_50px_rgba(255,42,133,0.35)]"} rounded-3xl p-6 md:p-8 backdrop-blur-xl transition-all duration-200`}>
+          
+          {/* Header Badge */}
+          <div className="text-center space-y-2 mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/70 border border-red-500/50 text-[11px] text-red-400 font-bold tracking-widest uppercase">
+              <ShieldAlert className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+              <span>FIB SECURITY PROTOCOL v6.2</span>
+            </div>
+
+            <h1 className="text-xl md:text-2xl font-black tracking-widest text-white uppercase drop-shadow-[0_0_10px_#ff2a85]">
+              LEONIDA CYBER VAULT
+            </h1>
+            <p className="text-xs text-gray-400 tracking-wide font-sans">
+              Dynamic Portfolio Database Access Restricted
+            </p>
+          </div>
+
+          {/* Masked PIN Display */}
+          <div className="mb-6 space-y-2">
+            <div className="text-[10px] text-gray-400 text-center tracking-wider uppercase font-bold">
+              ENTER 8-DIGIT CLEARANCE PIN
+            </div>
+
+            <div className="flex items-center justify-center gap-2 py-3 px-4 bg-black/80 rounded-2xl border border-gray-700 shadow-inner">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => {
+                const isFilled = idx < enteredPin.length;
+                return (
+                  <div
+                    key={idx}
+                    className={`w-4 h-4 rounded-full border transition-all duration-150 ${
+                      isFilled
+                        ? "bg-[#00f0ff] border-[#00f0ff] shadow-[0_0_10px_#00f0ff] scale-110"
+                        : "bg-gray-900 border-gray-700"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Error Message */}
+            {pinError && (
+              <div className="text-center text-xs text-red-400 font-bold bg-red-950/80 p-2.5 rounded-xl border border-red-500/50 animate-pulse">
+                {pinError}
+              </div>
+            )}
+          </div>
+
+          {/* Numeric Keypad Grid */}
+          <div className="grid grid-cols-3 gap-2.5 mb-5">
+            {["1", "2", "3", "4", "5", "6", "7", "8", "9", "CLEAR", "0", "UNLOCK"].map((btn) => {
+              return (
+                <button
+                  key={btn}
+                  type="button"
+                  onClick={() => {
+                    if (btn === "UNLOCK") {
+                      verifyPin(enteredPin);
+                    } else {
+                      handleKeypadPress(btn);
+                    }
+                  }}
+                  className={`h-11 rounded-xl font-mono font-bold text-sm transition-all active:scale-95 flex items-center justify-center ${
+                    btn === "CLEAR"
+                      ? "bg-red-950/60 border border-red-500/50 text-red-300 hover:bg-red-900/60"
+                      : btn === "UNLOCK"
+                      ? "bg-gradient-to-r from-[#00f0ff] to-[#00b4d8] text-black font-black hover:opacity-90 shadow-[0_0_15px_rgba(0,240,255,0.4)]"
+                      : "bg-[#1d0333]/90 border border-purple-500/30 text-white hover:border-[#00f0ff] hover:text-[#00f0ff] hover:bg-[#250442]"
+                  }`}
+                >
+                  {btn === "CLEAR" ? "CLR" : btn === "UNLOCK" ? <Lock className="w-4 h-4" /> : btn}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Direct Keyboard Form Input */}
+          <form onSubmit={handlePinFormSubmit} className="mb-4">
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={8}
+              value={enteredPin}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "");
+                setEnteredPin(val);
+                if (val.length === 8) verifyPin(val);
+              }}
+              placeholder="Or type PIN on keyboard..."
+              className="w-full text-center bg-black/50 border border-gray-700 focus:border-[#ff2a85] rounded-xl py-2 px-3 text-sm text-[#00f0ff] font-mono tracking-widest placeholder:text-gray-600 focus:outline-none"
+            />
+          </form>
+
+          {/* Back to Public Portfolio Link */}
+          <div className="text-center pt-2 border-t border-gray-800">
+            <Link
+              href="/"
+              className="text-xs text-gray-400 hover:text-[#00f0ff] font-sans flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to Public Dossier</span>
+            </Link>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
   const p = formData.profile;
 
   return (
@@ -357,6 +568,15 @@ export default function AdminPage() {
             >
               <Save className="w-4 h-4" />
               <span>{isSaving ? "SAVING..." : "SAVE ALL CHANGES"}</span>
+            </button>
+
+            <button
+              onClick={handleLockVault}
+              className="px-3 py-1.5 rounded-lg bg-red-950/60 border border-red-500/50 hover:bg-red-900 text-red-300 hover:text-white flex items-center gap-1.5 transition-all"
+              title="Lock admin vault and logout"
+            >
+              <Lock className="w-3.5 h-3.5 text-red-400" />
+              <span className="hidden md:inline">Lock Vault</span>
             </button>
           </div>
 

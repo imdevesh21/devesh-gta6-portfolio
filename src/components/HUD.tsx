@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Volume2, VolumeX, Briefcase, ShieldAlert, Settings } from "lucide-react";
+import { Volume2, VolumeX, Briefcase, ShieldAlert } from "lucide-react";
 import { PalmTreeIcon } from "./Icons";
-import Link from "next/link";
 
 interface HUDProps {
   executiveMode: boolean;
@@ -125,16 +124,6 @@ export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode }
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-[#00f0ff]" />}
           </button>
-
-          {/* Admin Panel Quick Link */}
-          <Link
-            href="/admin"
-            className="px-2.5 py-1.5 rounded bg-black/80 border border-cyan-400/50 hover:border-cyan-300 text-cyan-300 hover:text-white font-bold text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,240,255,0.25)] hover:scale-105 transition-all"
-            title="Open Dynamic Admin Control Panel"
-          >
-            <Settings className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: "8s" }} />
-            <span className="hidden sm:inline">Admin Panel</span>
-          </Link>
 
           {/* Recruiter Executive Mode Toggle */}
           <button
