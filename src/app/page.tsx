@@ -43,6 +43,15 @@ export default function Home() {
     }
   };
 
+  const handleLogoClick = () => {
+    sfx.playWeapon();
+    setActiveTab("dossier");
+    setExecutiveMode(false);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-[#0c0119] text-white overflow-x-hidden selection:bg-[#ff2a85] selection:text-white">
 
@@ -56,6 +65,7 @@ export default function Home() {
         onOpenArcade={() => handleTabChange("arcade")}
         onToggleRadio={handleToggleRadio}
         isRadioOpen={isRadioOpen}
+        onLogoClick={handleLogoClick}
       />
 
       {executiveMode ? (
@@ -72,7 +82,7 @@ export default function Home() {
           <div className="fixed inset-0 scanlines pointer-events-none z-10 opacity-30" />
 
           {/* 5. Main Hero Callout & Interactive Navigation Bar */}
-          <div className="relative z-20 max-w-6xl mx-auto px-4 pt-6 pb-2">
+          <div className="relative z-20 max-w-7xl mx-auto px-4 pt-6 pb-2">
 
             {/* Quick Tactical Location Banner */}
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono mb-4 bg-black/60 backdrop-blur-md p-2.5 rounded-xl border border-gray-800">
@@ -96,73 +106,79 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Mission Deck Tab Bar */}
-            <nav className="bg-[#140124]/90 backdrop-blur-xl border border-[#ff2a85]/40 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(255,42,133,0.3)] mb-6">
-              <div className="flex items-center justify-between overflow-x-auto gap-1.5 no-scrollbar">
+            {/* Mission Deck Tab Bar (Bold, Prominent & Fully Responsive) */}
+            <nav className="bg-[#140124]/95 backdrop-blur-2xl border-2 border-[#ff2a85]/50 rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-[0_0_35px_rgba(255,42,133,0.35)] mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
                 <button
                   onClick={() => handleTabChange("dossier")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "dossier"
-                      ? "bg-[#ff2a85] text-white shadow-[0_0_15px_#ff2a85] scale-102"
-                      : "text-gray-300 hover:text-white hover:bg-white/10"
-                    }`}
+                  className={`py-3 px-3 sm:px-4 rounded-xl font-mono text-xs sm:text-sm font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 select-none ${
+                    activeTab === "dossier"
+                      ? "bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white shadow-[0_0_20px_#ff2a85] scale-[1.03]"
+                      : "bg-black/60 border border-gray-800 text-gray-300 hover:text-white hover:border-[#ff2a85]/50 hover:bg-white/5"
+                  }`}
                 >
-                  <span>👤</span>
-                  <span>Operative Dossier</span>
+                  <span className="text-base sm:text-lg">👤</span>
+                  <span className="truncate">Dossier</span>
                 </button>
 
                 <button
                   onClick={() => handleTabChange("weapons")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "weapons"
-                      ? "bg-[#00f0ff] text-black shadow-[0_0_15px_#00f0ff] scale-102"
-                      : "text-gray-300 hover:text-white hover:bg-white/10"
-                    }`}
+                  className={`py-3 px-3 sm:px-4 rounded-xl font-mono text-xs sm:text-sm font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 select-none ${
+                    activeTab === "weapons"
+                      ? "bg-gradient-to-r from-[#00f0ff] to-[#00a8ff] text-black shadow-[0_0_20px_#00f0ff] scale-[1.03]"
+                      : "bg-black/60 border border-gray-800 text-gray-300 hover:text-white hover:border-[#00f0ff]/50 hover:bg-white/5"
+                  }`}
                 >
-                  <span>🔫</span>
-                  <span>Weapon Wheel (Skills)</span>
+                  <span className="text-base sm:text-lg">🔫</span>
+                  <span className="truncate">Weapon Wheel</span>
                 </button>
 
                 <button
                   onClick={() => handleTabChange("campaign")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "campaign"
-                      ? "bg-[#ff2a85] text-white shadow-[0_0_15px_#ff2a85] scale-102"
-                      : "text-gray-300 hover:text-white hover:bg-white/10"
-                    }`}
+                  className={`py-3 px-3 sm:px-4 rounded-xl font-mono text-xs sm:text-sm font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 select-none ${
+                    activeTab === "campaign"
+                      ? "bg-gradient-to-r from-[#ff2a85] to-[#e11d48] text-white shadow-[0_0_20px_#ff2a85] scale-[1.03]"
+                      : "bg-black/60 border border-gray-800 text-gray-300 hover:text-white hover:border-[#ff2a85]/50 hover:bg-white/5"
+                  }`}
                 >
-                  <span>🚁</span>
-                  <span>Campaign Heists (Exp)</span>
+                  <span className="text-base sm:text-lg">🚁</span>
+                  <span className="truncate">Heists</span>
                 </button>
 
                 <button
                   onClick={() => handleTabChange("contracts")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "contracts"
-                      ? "bg-[#00f0ff] text-black shadow-[0_0_15px_#00f0ff] scale-102"
-                      : "text-gray-300 hover:text-white hover:bg-white/10"
-                    }`}
+                  className={`py-3 px-3 sm:px-4 rounded-xl font-mono text-xs sm:text-sm font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 select-none ${
+                    activeTab === "contracts"
+                      ? "bg-gradient-to-r from-[#00f0ff] to-[#38bdf8] text-black shadow-[0_0_20px_#00f0ff] scale-[1.03]"
+                      : "bg-black/60 border border-gray-800 text-gray-300 hover:text-white hover:border-[#00f0ff]/50 hover:bg-white/5"
+                  }`}
                 >
-                  <span>💎</span>
-                  <span>Bounty Contracts (Projects)</span>
+                  <span className="text-base sm:text-lg">💎</span>
+                  <span className="truncate">Bounties</span>
                 </button>
 
                 <button
                   onClick={() => handleTabChange("trophies")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "trophies"
-                      ? "bg-[#ffb700] text-black shadow-[0_0_15px_#ffb700] scale-102"
-                      : "text-gray-300 hover:text-white hover:bg-white/10"
-                    }`}
+                  className={`py-3 px-3 sm:px-4 rounded-xl font-mono text-xs sm:text-sm font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 select-none ${
+                    activeTab === "trophies"
+                      ? "bg-gradient-to-r from-[#ffb700] to-[#f59e0b] text-black shadow-[0_0_20px_#ffb700] scale-[1.03]"
+                      : "bg-black/60 border border-gray-800 text-gray-300 hover:text-white hover:border-[#ffb700]/50 hover:bg-white/5"
+                  }`}
                 >
-                  <span>🏆</span>
-                  <span>Street Cred (Certs)</span>
+                  <span className="text-base sm:text-lg">🏆</span>
+                  <span className="truncate">Street Cred</span>
                 </button>
 
                 <button
                   onClick={() => handleTabChange("arcade")}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "arcade"
-                      ? "bg-gradient-to-r from-[#ff2a85] to-[#00f0ff] text-white shadow-[0_0_20px_#ff2a85] scale-102"
-                      : "text-gray-300 hover:text-white hover:bg-white/10"
-                    }`}
+                  className={`py-3 px-3 sm:px-4 rounded-xl font-mono text-xs sm:text-sm font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 select-none ${
+                    activeTab === "arcade"
+                      ? "bg-gradient-to-r from-[#ff2a85] via-[#a855f7] to-[#00f0ff] text-white shadow-[0_0_25px_#ff2a85] scale-[1.03]"
+                      : "bg-black/60 border border-gray-800 text-gray-300 hover:text-white hover:border-cyan-500/50 hover:bg-white/5"
+                  }`}
                 >
-                  <span className="animate-pulse">🕹️</span>
-                  <span>Vice Arcade</span>
+                  <span className="text-base sm:text-lg animate-pulse">🕹️</span>
+                  <span className="truncate">Vice Arcade</span>
                 </button>
               </div>
             </nav>

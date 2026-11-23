@@ -15,6 +15,16 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete }) =>
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
+    // Only play cinematic intro once per session so navigating doesn't re-trigger black bars
+    if (typeof window !== "undefined" && sessionStorage.getItem("gta6_intro_played")) {
+      setHidden(true);
+      onComplete();
+      return;
+    }
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("gta6_intro_played", "true");
+    }
+
     const tl = gsap.timeline({
       onComplete: () => {
         setHidden(true);

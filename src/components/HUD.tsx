@@ -13,6 +13,7 @@ interface HUDProps {
   onOpenArcade?: () => void;
   onToggleRadio?: () => void;
   isRadioOpen?: boolean;
+  onLogoClick?: () => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({ 
@@ -20,7 +21,8 @@ export const HUD: React.FC<HUDProps> = ({
   onToggleExecutiveMode, 
   onOpenArcade,
   onToggleRadio,
-  isRadioOpen
+  isRadioOpen,
+  onLogoClick
 }) => {
   const { data } = usePortfolio();
   const profile = data.profile;
@@ -55,14 +57,18 @@ export const HUD: React.FC<HUDProps> = ({
         {/* Operative Callout & Wanted Rating */}
         <div className="flex items-center gap-4">
           <div 
-            className="flex items-center gap-1.5 cursor-pointer group" 
-            onClick={() => sfx.playBleep()}
+            className="flex items-center gap-2 cursor-pointer group select-none hover:opacity-90 active:scale-95 transition-all" 
+            onClick={() => {
+              sfx.playBleep();
+              if (onLogoClick) onLogoClick();
+            }}
+            title="Reset to Operative Dossier"
           >
-            <span className="text-2xl font-black italic tracking-tighter text-[#00f0ff] drop-shadow-[0_0_8px_#00f0ff] group-hover:scale-110 transition-transform">
+            <span className="text-3xl font-black italic tracking-tighter text-[#00f0ff] drop-shadow-[0_0_12px_#00f0ff] group-hover:scale-110 transition-transform">
               VI
             </span>
             <div className="leading-none">
-              <h1 className="text-lg font-black tracking-widest text-white uppercase drop-shadow-[0_0_6px_#ff2a85]">
+              <h1 className="text-lg sm:text-xl font-black tracking-widest text-white uppercase drop-shadow-[0_0_8px_#ff2a85] group-hover:text-[#00f0ff] transition-colors">
                 {profile.name}
               </h1>
               <span className="text-[10px] tracking-widest text-[#ff2a85] font-mono font-bold">
