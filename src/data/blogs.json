@@ -1,0 +1,69 @@
+[
+  {
+    "id": "dispatch-001",
+    "slug": "architecting-gta6-3d-portfolio-threejs-nextjs",
+    "title": "Architecting a GTA-6 3D WebGL Portfolio: Deep Dive into Three.js, GSAP & Next.js 14",
+    "subtitle": "How we rendered the neon streets of Vice City in the browser at 60 FPS",
+    "excerpt": "A masterclass on combining Three.js custom procedural shaders, GLTF lighting rigs, and React 18 concurrent rendering to build an unforgettable cyber developer experience.",
+    "content": "## The Mission Objective\n\nWhen standard developer portfolios feel like flat resumes, how do you capture a recruiter's attention in less than 3 seconds? You drop them straight into the sun-drenched, neon-drenched streets of Vice City.\n\nIn this technical breakdown, we explore how this portfolio was engineered from scratch using **Next.js 14 App Router**, **Three.js WebGL shaders**, and **GSAP smooth timeline orchestrations**.\n\n```typescript\n// Procedural Cyber Terrain Mesh Generator\nconst geometry = new THREE.PlaneGeometry(80, 80, 64, 64);\nconst material = new THREE.MeshStandardMaterial({\n  color: 0x140124,\n  wireframe: true,\n  roughness: 0.2,\n  metalness: 0.8,\n});\n```\n\n### 1. Eliminating WebGL Frame Drops\n\nThe biggest enemy of browser 3D experiences is memory garbage collection. By utilizing custom instance buffers and reusing geometries across view changes, we achieved a consistent **60 FPS render cycle** even with CRT scanlines and dynamic point lighting enabled.\n\n### 2. Audio Synthesis via Web Audio API\n\nInstead of loading bulky 5MB audio files that slow down initial page loads, every sound effect—from the weapon wheel clicks to the iFruit dial tones—is generated procedurally in real-time via client-side oscillator frequency sweeps.\n\n### 3. Dual-Layer Disk & Local Persistence\n\nChanges made in the Admin Panel write directly to local JSON databases via server-side Node.js API handlers, while synchronizing with React state for zero-latency client feedback.",
+    "coverImage": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop",
+    "videoUrl": "",
+    "category": "GTA Dev Logs",
+    "tags": ["Three.js", "Next.js", "WebGL", "GSAP", "Tailwind CSS"],
+    "author": {
+      "name": "Devesh Sharma",
+      "role": "Lead Systems Architect & Full-Stack Operative",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"
+    },
+    "publishedAt": "2026-11-20",
+    "status": "published",
+    "readingTime": "5 min read",
+    "views": 1420,
+    "likes": 89,
+    "featured": true
+  },
+  {
+    "id": "dispatch-002",
+    "slug": "scaling-nodejs-microservices-caching-redis-heists",
+    "title": "Scaling Node.js Backends Under Heavy Load: Redis Caching & Asynchronous Queue Pipelines",
+    "excerpt": "Handling 10,000 requests/sec without breaking a sweat: connection pooling, BullMQ workers, and Redis bloom filters for lightning-fast database protection.",
+    "content": "## High-Concurrency Backend Engineering\n\nWhen building production enterprise backends, query bottlenecks and thread starvation can take down even the most robust infrastructure.\n\nHere is the architecture we deployed to cut database latency from 240ms down to **12ms**:\n\n### Architectural Pillars\n\n1. **Redis Multi-Tier Caching**: Caching frequently accessed read endpoints with deterministic TTL invalidation.\n2. **BullMQ Worker Queues**: Decoupling compute-heavy PDF generation and notification dispatchers from the primary HTTP thread.\n3. **PostgreSQL Read Replicas**: Distributing read queries across connection pools managed via PgBouncer.\n\n```javascript\n// Atomic rate-limiting middleware pattern\nconst currentTokens = await redis.decr(`rate_limit:${clientIp}`);\nif (currentTokens < 0) {\n  return res.status(429).json({ error: 'Too Many Heists Attempted' });\n}\n```\n\nBy offloading non-critical operations to background daemons, the main API cluster maintains sub-50ms p99 latency during peak traffic spikes.",
+    "coverImage": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1200&auto=format&fit=crop",
+    "videoUrl": "",
+    "category": "Backend",
+    "tags": ["Node.js", "Redis", "PostgreSQL", "Microservices", "Docker"],
+    "author": {
+      "name": "Devesh Sharma",
+      "role": "Lead Systems Architect & Full-Stack Operative",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"
+    },
+    "publishedAt": "2026-11-15",
+    "status": "published",
+    "readingTime": "6 min read",
+    "views": 980,
+    "likes": 64,
+    "featured": false
+  },
+  {
+    "id": "dispatch-003",
+    "slug": "zero-runtime-state-management-nextjs-14-react-server-components",
+    "title": "Modern Frontend Discipline: Mastering React Server Components & Zero-Runtime State",
+    "excerpt": "Why over-engineering Redux or complex global stores can hurt your Web Vitals, and how Server Actions provide a cleaner, faster alternative.",
+    "content": "## The Shift from Heavy Client SPAs to Lean Server Components\n\nModern web applications often suffer from bundle bloat caused by unnecessary client-side state managers. With Next.js 14 Server Components and streaming SSR, we can achieve:\n\n- **Zero-bundle-size database fetching** directly on the server.\n- **Instant Cumulative Layout Shift (CLS) elimination** with progressive suspense boundaries.\n- **Optimistic UI mutations** using React 18 `useOptimistic` hook.\n\n```tsx\nexport default async function DossierStream() {\n  const intel = await fetchClassifiedIntel();\n  return <Suspense fallback={<CyberSkeleton />}>{intel.map(renderCard)}</Suspense>;\n}\n```\n\nClean architectural discipline means shipping less JavaScript to the client while giving the user a 10x snappier experience.",
+    "coverImage": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1200&auto=format&fit=crop",
+    "videoUrl": "",
+    "category": "Frontend",
+    "tags": ["React 18", "Next.js 14", "TypeScript", "Performance", "Web Vitals"],
+    "author": {
+      "name": "Devesh Sharma",
+      "role": "Lead Systems Architect & Full-Stack Operative",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"
+    },
+    "publishedAt": "2026-11-08",
+    "status": "published",
+    "readingTime": "4 min read",
+    "views": 750,
+    "likes": 42,
+    "featured": false
+  }
+]

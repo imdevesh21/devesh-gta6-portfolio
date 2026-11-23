@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Phone, Mail, Radio, MessageSquare, ChevronDown, Gamepad2 } from "lucide-react";
+import { Phone, Mail, Radio, MessageSquare, ChevronDown, Gamepad2, Newspaper } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./Icons";
 
 interface IFruitPhoneProps {
@@ -174,11 +175,24 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle, onOp
                 if (onOpenArcade) onOpenArcade();
                 onToggle();
               }}
-              className="p-2.5 bg-gradient-to-tr from-[#ff2a85]/40 to-[#00f0ff]/40 border border-[#00f0ff]/60 rounded-2xl hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 group shadow-[0_0_12px_rgba(0,240,255,0.25)] col-span-3 sm:col-span-1"
+              className="p-2.5 bg-gradient-to-tr from-[#ff2a85]/40 to-[#00f0ff]/40 border border-[#00f0ff]/60 rounded-2xl hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 group shadow-[0_0_12px_rgba(0,240,255,0.25)]"
             >
               <Gamepad2 className="w-5 h-5 text-cyan-300 group-hover:rotate-12 transition-transform" />
               <span className="text-cyan-200 font-bold">Arcade</span>
             </button>
+
+            {/* Weazel News Blog App */}
+            <Link
+              href="/blog"
+              onClick={() => {
+                sfx.playClick();
+                onToggle();
+              }}
+              className="p-2.5 bg-gradient-to-tr from-purple-950/70 to-pink-950/70 border border-[#ff2a85]/60 rounded-2xl hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 group shadow-[0_0_12px_rgba(255,42,133,0.25)] col-span-2 sm:col-span-1"
+            >
+              <Newspaper className="w-5 h-5 text-pink-300 group-hover:rotate-6 transition-transform" />
+              <span className="text-pink-200 font-bold">Weazel News</span>
+            </Link>
           </div>
 
           {/* Quick Contact Card Readout */}

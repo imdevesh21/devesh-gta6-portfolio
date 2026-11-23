@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { PortfolioData, SkillWeapon, ExperienceItem, ProjectItem, CertificationItem, AnalyticsSummary, VisitorLog } from "@/types/portfolio";
+import { BlogPost } from "@/types/blog";
 import { sfx } from "@/lib/soundFx";
 import Link from "next/link";
 import { 
@@ -32,7 +33,14 @@ import {
   Laptop,
   RefreshCw,
   FileSpreadsheet,
-  Search
+  Search,
+  Newspaper,
+  Video,
+  Image as ImageIcon,
+  Edit,
+  Eye,
+  Heart,
+  ExternalLink
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -81,6 +89,148 @@ export default function AdminPage() {
       fetchAnalytics(selectedMonth);
     }
   }, [isAuthenticated, selectedMonth]);
+
+  // Blog CMS States
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [isEditingBlog, setIsEditingBlog] = useState<boolean>(false);
+  const [selectedBlog, setSelectedBlog] = useState<Partial<BlogPost>>({
+    title: "",
+    subtitle: "",
+    slug: "",
+    excerpt: "",
+    content: "",
+    coverImage: "",
+    videoUrl: "",
+    category: "Architecture",
+    tags: ["Next.js", "Full-Stack"],
+    status: "published",
+    featured: false,
+    readingTime: "5 min read",
+  });
+  const [isUploadingMedia, setIsUploadingMedia] = useState<boolean>(false);
+  const [mediaUploadType, setMediaUploadType] = useState<string>("");
+  const [blogSearchQuery, setBlogSearchQuery] = useState<string>("");
+  const [isSavingBlog, setIsSavingBlog] = useState<boolean>(false);
+
+  const fetchBlogs = async () => {
+    try {
+      const res = await fetch("/api/blog");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.blogs) {
+          setBlogs(json.blogs);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load blogs:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchBlogs();
+    }
+  }, [isAuthenticated]);
+
+  const handleMediaUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    targetField: "coverImage" | "videoUrl"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    sfx.playClick();
+    setIsUploadingMedia(true);
+    setMediaUploadType(targetField === "videoUrl" ? "video" : "image");
+
+    try {
+      const formPayload = new FormData();
+      formPayload.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formPayload,
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        setSelectedBlog((prev) => ({ ...prev, [targetField]: data.url }));
+        sfx.playArcadePickup();
+        setSaveStatus(`Media uploaded successfully: ${data.fileName}`);
+        setTimeout(() => setSaveStatus(""), 3500);
+      } else {
+        alert(data.error || "Upload failed");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Failed to upload media file to server");
+    } finally {
+      setIsUploadingMedia(false);
+      setMediaUploadType("");
+      e.target.value = "";
+    }
+  };
+
+  const handleSaveBlog = async () => {
+    if (!selectedBlog.title || !selectedBlog.excerpt) {
+      alert("Please provide at least a title and an excerpt for the dispatch.");
+      return;
+    }
+
+    sfx.playClick();
+    setIsSavingBlog(true);
+
+    try {
+      const method = selectedBlog.id ? "PUT" : "POST";
+      const res = await fetch("/api/blog", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(selectedBlog),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        sfx.playMissionPassed();
+        confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } });
+        setSaveStatus(
+          selectedBlog.id
+            ? "DISPATCH UPDATED SUCCESSFULLY"
+            : "NEW DISPATCH PUBLISHED TO WEAZEL ARCHIVES"
+        );
+        setTimeout(() => setSaveStatus(""), 4000);
+        setIsEditingBlog(false);
+        fetchBlogs();
+      } else {
+        alert(data.error || "Failed to save blog");
+      }
+    } catch (err) {
+      console.error("Save blog error:", err);
+      alert("Network error while saving dispatch");
+    } finally {
+      setIsSavingBlog(false);
+    }
+  };
+
+  const handleDeleteBlog = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete dispatch: "${title}"?`)) return;
+    sfx.playWeapon();
+
+    try {
+      const res = await fetch(`/api/blog?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBlogs((prev) => prev.filter((b) => b.id !== id));
+        setSaveStatus(`Dispatch "${title}" deleted from archives.`);
+        setTimeout(() => setSaveStatus(""), 3000);
+      } else {
+        alert(data.error || "Failed to delete dispatch");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
 
   const exportLogsCsv = () => {
     if (!analytics || !analytics.recentLogs || analytics.recentLogs.length === 0) return;
@@ -772,6 +922,30 @@ export default function AdminPage() {
                 </div>
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-emerald-300 border border-emerald-500/30">
                   {analytics ? `${analytics.totalVisits} LOGS` : "LIVE"}
+                </span>
+              </button>
+            </div>
+
+            {/* Weazel News / Blog CMS */}
+            <div className="pt-2 border-t border-gray-800">
+              <button
+                onClick={() => {
+                  setActiveSection("blog");
+                  setIsEditingBlog(false);
+                  sfx.playClick();
+                }}
+                className={`w-full px-3 py-2.5 rounded-xl font-bold flex items-center justify-between gap-2 transition-all ${
+                  activeSection === "blog"
+                    ? "bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white shadow-[0_0_20px_#ff2a85] scale-[1.02]"
+                    : "bg-purple-950/40 border border-purple-500/40 text-purple-300 hover:bg-purple-900/50 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Newspaper className="w-4 h-4 text-pink-400" />
+                  <span>Weazel News (Blog CMS)</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-pink-300 border border-pink-500/30">
+                  {blogs.length} POSTS
                 </span>
               </button>
             </div>
@@ -1624,7 +1798,536 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* TAB 8: SURVEILLANCE RADAR & VISITOR TELEMETRY */}
+          {/* TAB 9: WEAZEL NEWS CMS (BLOG DISPATCHES) */}
+          {activeSection === "blog" && (
+            <div className="bg-[#140124] border border-[#ff2a85]/50 p-6 rounded-2xl space-y-6 shadow-xl animate-fadeIn">
+              
+              {/* Header & Controls */}
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Newspaper className="w-5 h-5 text-[#ff2a85]" />
+                    <h2 className="text-xl font-black text-white tracking-wide">
+                      WEAZEL NEWS CMS // DISPATCH ARCHIVES & BROADCAST STUDIO
+                    </h2>
+                  </div>
+                  <p className="text-xs font-mono text-gray-400 mt-1">
+                    Compose, edit, upload media and publish high-octane engineering intelligence to /blog.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 font-mono text-xs">
+                  {!isEditingBlog ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          sfx.playClick();
+                          setSelectedBlog({
+                            title: "",
+                            subtitle: "",
+                            slug: "",
+                            excerpt: "",
+                            content: "",
+                            coverImage: "",
+                            videoUrl: "",
+                            category: "Architecture",
+                            tags: ["Next.js", "Full-Stack"],
+                            status: "published",
+                            featured: false,
+                            readingTime: "5 min read",
+                          });
+                          setIsEditingBlog(true);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-bold tracking-wider shadow-[0_0_15px_#ff2a85] hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>WRITE NEW DISPATCH</span>
+                      </button>
+
+                      <Link
+                        href="/blog"
+                        target="_blank"
+                        onClick={() => sfx.playClick()}
+                        className="px-3 py-2 rounded-xl bg-black/60 border border-[#00f0ff]/50 hover:bg-cyan-950 text-[#00f0ff] hover:text-white flex items-center gap-1.5 transition-all"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>VIEW LIVE FEED</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        sfx.playClick();
+                        setIsEditingBlog(false);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-black/60 border border-gray-700 hover:border-red-400 text-gray-300 hover:text-white flex items-center gap-1.5 transition-all"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>BACK TO ARCHIVES</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* EDITOR FORM VIEW */}
+              {isEditingBlog ? (
+                <div className="space-y-6 bg-black/50 p-6 rounded-2xl border border-gray-800 font-mono text-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+                    <h3 className="text-sm font-black text-[#00f0ff] uppercase tracking-wider flex items-center gap-2">
+                      <Edit className="w-4 h-4" />
+                      <span>{selectedBlog.id ? "EDITING DISPATCH RECORD" : "COMPOSE NEW TRANSMISSION"}</span>
+                    </h3>
+
+                    {selectedBlog.slug && (
+                      <span className="text-gray-400">
+                        TARGET: <code className="text-[#ff2a85]">/blog/{selectedBlog.slug}</code>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Title & Subtitle */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase">DISPATCH TITLE *</label>
+                      <input
+                        type="text"
+                        value={selectedBlog.title || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedBlog((prev) => ({
+                            ...prev,
+                            title: val,
+                            slug: prev.id ? prev.slug : val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
+                          }));
+                        }}
+                        placeholder="e.g. Architecting Scalable Microservices"
+                        className="w-full p-2.5 rounded-xl bg-black/80 border border-gray-700 focus:border-[#ff2a85] text-white text-xs outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase">SUBTITLE / CATCHPHRASE</label>
+                      <input
+                        type="text"
+                        value={selectedBlog.subtitle || ""}
+                        onChange={(e) => setSelectedBlog((prev) => ({ ...prev, subtitle: e.target.value }))}
+                        placeholder="e.g. Lessons from High-Traffic Webapps"
+                        className="w-full p-2.5 rounded-xl bg-black/80 border border-gray-700 focus:border-[#ff2a85] text-white text-xs outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Slug, Category & Reading Time */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase">URL SLUG</label>
+                      <input
+                        type="text"
+                        value={selectedBlog.slug || ""}
+                        onChange={(e) => setSelectedBlog((prev) => ({ ...prev, slug: e.target.value }))}
+                        placeholder="article-url-slug"
+                        className="w-full p-2.5 rounded-xl bg-black/80 border border-gray-700 focus:border-[#00f0ff] text-cyan-300 text-xs outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase">CATEGORY</label>
+                      <select
+                        value={selectedBlog.category || "Architecture"}
+                        onChange={(e) => setSelectedBlog((prev) => ({ ...prev, category: e.target.value as BlogPost["category"] }))}
+                        className="w-full p-2.5 rounded-xl bg-black/80 border border-gray-700 focus:border-[#00f0ff] text-white text-xs outline-none"
+                      >
+                        <option value="Architecture">Architecture</option>
+                        <option value="Backend">Backend</option>
+                        <option value="Frontend">Frontend</option>
+                        <option value="DevOps">DevOps</option>
+                        <option value="AI & ML">AI & ML</option>
+                        <option value="GTA Dev Logs">GTA Dev Logs</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase">ESTIMATED READING TIME</label>
+                      <input
+                        type="text"
+                        value={selectedBlog.readingTime || "5 min read"}
+                        onChange={(e) => setSelectedBlog((prev) => ({ ...prev, readingTime: e.target.value }))}
+                        className="w-full p-2.5 rounded-xl bg-black/80 border border-gray-700 text-white text-xs outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Status, Featured & Tags */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase">BROADCAST STATUS</label>
+                      <select
+                        value={selectedBlog.status || "published"}
+                        onChange={(e) => setSelectedBlog((prev) => ({ ...prev, status: e.target.value as BlogPost["status"] }))}
+                        className="w-full p-2.5 rounded-xl bg-black/80 border border-gray-700 text-white text-xs outline-none"
+                      >
+                        <option value="published">Published (Public)</option>
+                        <option value="draft">Draft (Restricted)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase">BREAKING STORY PIN</label>
+                      <label className="flex items-center gap-2 p-2.5 rounded-xl bg-black/80 border border-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(selectedBlog.featured)}
+                          onChange={(e) => setSelectedBlog((prev) => ({ ...prev, featured: e.target.checked }))}
+                          className="rounded text-[#ff2a85] focus:ring-0"
+                        />
+                        <span className="text-gray-300 font-bold">Featured Hero Banner</span>
+                      </label>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase">TAGS (COMMA SEPARATED)</label>
+                      <input
+                        type="text"
+                        value={Array.isArray(selectedBlog.tags) ? selectedBlog.tags.join(", ") : (selectedBlog.tags || "")}
+                        onChange={(e) => setSelectedBlog((prev) => ({ ...prev, tags: e.target.value.split(",").map((s) => s.trim()) }))}
+                        placeholder="Next.js, Three.js, Redis"
+                        className="w-full p-2.5 rounded-xl bg-black/80 border border-gray-700 text-white text-xs outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* MEDIA SECTION: IMAGE & VIDEO UPLOADS */}
+                  <div className="p-4 rounded-xl bg-black/80 border border-[#ff2a85]/40 space-y-4">
+                    <div className="flex items-center gap-2 text-pink-400 font-bold">
+                      <ImageIcon className="w-4 h-4" />
+                      <span>ATTACHED MEDIA ASSETS (IMAGE & VIDEO STORAGE VAULT)</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* 1. Cover Image Uploader */}
+                      <div className="space-y-2 p-3 bg-gray-950/70 rounded-xl border border-gray-800">
+                        <label className="text-gray-400 font-bold flex items-center justify-between">
+                          <span>1. COVER IMAGE</span>
+                          <span className="text-[10px] text-gray-500">PNG, JPG, WebP</span>
+                        </label>
+
+                        {/* File Upload Button */}
+                        <div className="flex items-center gap-2">
+                          <label className="px-3 py-2 rounded-lg bg-pink-950/70 border border-pink-500/50 hover:bg-pink-900 text-pink-300 hover:text-white cursor-pointer flex items-center gap-1.5 transition-all">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>{isUploadingMedia && mediaUploadType === "image" ? "UPLOADING..." : "UPLOAD IMAGE"}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={isUploadingMedia}
+                              onChange={(e) => handleMediaUpload(e, "coverImage")}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <span className="text-gray-600">OR</span>
+
+                          <input
+                            type="text"
+                            value={selectedBlog.coverImage || ""}
+                            onChange={(e) => setSelectedBlog((prev) => ({ ...prev, coverImage: e.target.value }))}
+                            placeholder="https://... or /uploads/..."
+                            className="flex-1 p-2 rounded-lg bg-black border border-gray-800 text-gray-300 text-[11px] outline-none"
+                          />
+                        </div>
+
+                        {/* Image Preview */}
+                        {selectedBlog.coverImage && (
+                          <div className="relative h-28 w-full rounded-lg overflow-hidden border border-pink-500/40 bg-black mt-2">
+                            <img
+                              src={selectedBlog.coverImage}
+                              alt="Cover Preview"
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setSelectedBlog((prev) => ({ ...prev, coverImage: "" }))}
+                              className="absolute top-1 right-1 p-1 rounded bg-black/80 text-red-400 hover:text-white"
+                              title="Remove Image"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 2. Video Uploader */}
+                      <div className="space-y-2 p-3 bg-gray-950/70 rounded-xl border border-gray-800">
+                        <label className="text-gray-400 font-bold flex items-center justify-between">
+                          <span>2. EMBEDDED VIDEO</span>
+                          <span className="text-[10px] text-gray-500">MP4, WebM or YouTube</span>
+                        </label>
+
+                        {/* Video Upload Button */}
+                        <div className="flex items-center gap-2">
+                          <label className="px-3 py-2 rounded-lg bg-cyan-950/70 border border-cyan-500/50 hover:bg-cyan-900 text-cyan-300 hover:text-white cursor-pointer flex items-center gap-1.5 transition-all">
+                            <Video className="w-3.5 h-3.5" />
+                            <span>{isUploadingMedia && mediaUploadType === "video" ? "UPLOADING..." : "UPLOAD VIDEO"}</span>
+                            <input
+                              type="file"
+                              accept="video/*"
+                              disabled={isUploadingMedia}
+                              onChange={(e) => handleMediaUpload(e, "videoUrl")}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <span className="text-gray-600">OR</span>
+
+                          <input
+                            type="text"
+                            value={selectedBlog.videoUrl || ""}
+                            onChange={(e) => setSelectedBlog((prev) => ({ ...prev, videoUrl: e.target.value }))}
+                            placeholder="YouTube URL or /uploads/..."
+                            className="flex-1 p-2 rounded-lg bg-black border border-gray-800 text-gray-300 text-[11px] outline-none"
+                          />
+                        </div>
+
+                        {/* Video Preview */}
+                        {selectedBlog.videoUrl && (
+                          <div className="relative aspect-video w-full rounded-lg overflow-hidden border border-cyan-500/40 bg-black mt-2">
+                            {selectedBlog.videoUrl.includes("youtube.com") || selectedBlog.videoUrl.includes("youtu.be") ? (
+                              <div className="w-full h-full flex items-center justify-center text-cyan-400 text-xs">
+                                🎬 YouTube Embed Linked: {selectedBlog.videoUrl}
+                              </div>
+                            ) : (
+                              <video
+                                src={selectedBlog.videoUrl}
+                                controls
+                                className="w-full h-full object-contain"
+                              />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedBlog((prev) => ({ ...prev, videoUrl: "" }))}
+                              className="absolute top-1 right-1 p-1 rounded bg-black/80 text-red-400 hover:text-white"
+                              title="Remove Video"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Excerpt */}
+                  <div className="space-y-1.5">
+                    <label className="text-gray-400 font-bold uppercase">SYNOPSIS / EXCERPT (FEED DISPLAY) *</label>
+                    <textarea
+                      rows={2}
+                      value={selectedBlog.excerpt || ""}
+                      onChange={(e) => setSelectedBlog((prev) => ({ ...prev, excerpt: e.target.value }))}
+                      placeholder="Brief teaser of the article shown in the Weazel feed..."
+                      className="w-full p-2.5 rounded-xl bg-black/80 border border-gray-700 focus:border-[#ff2a85] text-white text-xs outline-none"
+                    />
+                  </div>
+
+                  {/* Markdown Content */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-gray-400 font-bold uppercase">ARTICLE BODY (MARKDOWN SUPPORTED) *</label>
+                      <div className="flex items-center gap-1 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBlog((prev) => ({ ...prev, content: (prev.content || "") + "\n\n## Section Title\n" }))}
+                          className="px-2 py-0.5 rounded bg-gray-900 hover:bg-gray-800 text-gray-300"
+                        >
+                          + Heading
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBlog((prev) => ({ ...prev, content: (prev.content || "") + "\n\n```typescript\n// Code goes here\n```\n" }))}
+                          className="px-2 py-0.5 rounded bg-gray-900 hover:bg-gray-800 text-[#00f0ff]"
+                        >
+                          + Code Block
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBlog((prev) => ({ ...prev, content: (prev.content || "") + "\n\n> Important quote or takeaway\n" }))}
+                          className="px-2 py-0.5 rounded bg-gray-900 hover:bg-gray-800 text-pink-300"
+                        >
+                          + Quote
+                        </button>
+                      </div>
+                    </div>
+
+                    <textarea
+                      rows={12}
+                      value={selectedBlog.content || ""}
+                      onChange={(e) => setSelectedBlog((prev) => ({ ...prev, content: e.target.value }))}
+                      placeholder="Write your article markdown here. Supports ## Headings, code blocks (```ts), quotes (>), and bullet points (-)..."
+                      className="w-full p-3.5 rounded-xl bg-black/80 border border-gray-700 focus:border-[#00f0ff] text-white text-xs outline-none font-mono leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingBlog(false)}
+                      className="px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white"
+                    >
+                      CANCEL
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isSavingBlog}
+                      onClick={handleSaveBlog}
+                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-bold tracking-wider shadow-[0_0_20px_#ff2a85] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{isSavingBlog ? "SAVING..." : selectedBlog.id ? "UPDATE DISPATCH" : "PUBLISH TO WEAZEL ARCHIVES"}</span>
+                    </button>
+                  </div>
+
+                </div>
+              ) : (
+                /* DISPATCHES ARCHIVE LIST VIEW */
+                <div className="space-y-4">
+                  
+                  {/* Search & Stats Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-black/50 p-3 rounded-xl border border-gray-800 font-mono text-xs">
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <span className="text-gray-500">TOTAL STORIES:</span>{" "}
+                        <span className="text-white font-black">{blogs.length}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">PUBLISHED:</span>{" "}
+                        <span className="text-emerald-400 font-black">{blogs.filter((b) => b.status === "published").length}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">TOTAL VIEWS:</span>{" "}
+                        <span className="text-[#00f0ff] font-black">{blogs.reduce((acc, b) => acc + (b.views || 0), 0)}</span>
+                      </div>
+                    </div>
+
+                    <div className="w-full sm:w-64 relative">
+                      <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={blogSearchQuery}
+                        onChange={(e) => setBlogSearchQuery(e.target.value)}
+                        placeholder="Search dispatches..."
+                        className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-black border border-gray-800 text-white text-xs outline-none focus:border-[#ff2a85]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dispatches Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {blogs
+                      .filter((b) => {
+                        if (!blogSearchQuery) return true;
+                        const q = blogSearchQuery.toLowerCase();
+                        return (
+                          b.title.toLowerCase().includes(q) ||
+                          b.category.toLowerCase().includes(q) ||
+                          b.tags.some((t) => t.toLowerCase().includes(q))
+                        );
+                      })
+                      .map((post) => (
+                        <div
+                          key={post.id}
+                          className="bg-black/60 p-4 rounded-2xl border border-gray-800 hover:border-pink-500/50 transition-all flex flex-col justify-between space-y-3"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-black border border-gray-800 shrink-0">
+                              {post.coverImage ? (
+                                <img
+                                  src={post.coverImage}
+                                  alt={post.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-700">
+                                  <Newspaper className="w-6 h-6" />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center justify-between text-[10px] font-mono">
+                                <span className="px-2 py-0.5 rounded bg-cyan-950 text-[#00f0ff] font-bold">
+                                  {post.category}
+                                </span>
+                                <span className={post.status === "published" ? "text-emerald-400 font-bold" : "text-amber-400"}>
+                                  ● {post.status.toUpperCase()}
+                                </span>
+                              </div>
+
+                              <h4 className="text-sm font-black text-white line-clamp-1">
+                                {post.title}
+                              </h4>
+
+                              <p className="text-[11px] text-gray-400 line-clamp-2">
+                                {post.excerpt}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Footer stats & Action buttons */}
+                          <div className="flex items-center justify-between font-mono text-xs pt-2 border-t border-gray-900">
+                            <div className="flex items-center gap-3 text-gray-500 text-[11px]">
+                              <span className="flex items-center gap-1">
+                                <Eye className="w-3 h-3 text-[#00f0ff]" /> {post.views}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Heart className="w-3 h-3 text-[#ff2a85]" /> {post.likes}
+                              </span>
+                              {post.videoUrl && (
+                                <span className="text-pink-400 flex items-center gap-0.5">
+                                  <Video className="w-3 h-3" /> Video
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <Link
+                                href={`/blog/${post.slug}`}
+                                target="_blank"
+                                className="p-1.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white"
+                                title="View Live Dispatch"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </Link>
+
+                              <button
+                                onClick={() => {
+                                  sfx.playClick();
+                                  setSelectedBlog(post);
+                                  setIsEditingBlog(true);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-pink-950/60 border border-pink-500/50 hover:bg-pink-900 text-pink-300 hover:text-white font-bold flex items-center gap-1 text-[11px]"
+                              >
+                                <Edit className="w-3 h-3" />
+                                <span>Edit</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteBlog(post.id, post.title)}
+                                className="p-1.5 rounded-lg bg-red-950/50 hover:bg-red-900 border border-red-500/40 text-red-400 hover:text-white"
+                                title="Delete Dispatch"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
           {activeSection === "surveillance" && (
             <div className="bg-[#140124] border border-emerald-500/50 p-6 rounded-2xl space-y-6 shadow-xl animate-fadeIn">
               

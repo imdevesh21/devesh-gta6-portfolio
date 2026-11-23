@@ -42,6 +42,7 @@ export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, on
     switch (cmd) {
       case "HELP":
         newLogs.push("AVAILABLE CHEAT CODES:");
+        newLogs.push("  BLOG      - Read Weazel News & Classified Tech Dispatches");
         newLogs.push("  ARCADE    - Launch Leonida Highway Pursuit 60FPS Game");
         newLogs.push("  ADMIN     - Hack security protocol & enter Admin Panel");
         newLogs.push("  LEETCODE  - Unlock 150+ DSA algorithmic firestorm");
@@ -49,6 +50,16 @@ export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, on
         newLogs.push("  GODMODE   - Max out Operative Health & Armor (100%)");
         newLogs.push("  BOUNTY    - Grant $5,000,000 computational value");
         newLogs.push("  CLEAR     - Wipe terminal history");
+        break;
+
+      case "BLOG":
+      case "NEWS":
+        newLogs.push(">>> OPENING WEAZEL UNDERGROUND DISPATCH TRANSMISSIONS...");
+        sfx.playClick();
+        setTimeout(() => {
+          onClose();
+          router.push("/blog");
+        }, 500);
         break;
 
       case "ARCADE":

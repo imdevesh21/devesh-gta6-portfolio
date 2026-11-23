@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Volume2, VolumeX, Briefcase, ShieldAlert, Gamepad2 } from "lucide-react";
+import { Volume2, VolumeX, Briefcase, ShieldAlert, Gamepad2, Newspaper } from "lucide-react";
 import { PalmTreeIcon } from "./Icons";
 
 interface HUDProps {
@@ -140,6 +141,17 @@ export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode, 
               <span className="hidden sm:inline">ARCADE</span>
             </button>
           )}
+
+          {/* Weazel News Blog Link */}
+          <Link
+            href="/blog"
+            onClick={() => sfx.playClick()}
+            className="px-2.5 py-1.5 rounded-lg bg-black/70 border border-[#ff2a85]/50 hover:border-[#00f0ff] text-pink-300 hover:text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(255,42,133,0.2)] hover:shadow-[0_0_15px_#00f0ff]"
+            title="Read Weazel News & Tech Dispatches"
+          >
+            <Newspaper className="w-3.5 h-3.5 text-[#ff2a85]" />
+            <span className="hidden sm:inline">DISPATCHES</span>
+          </Link>
 
           {/* Recruiter Executive Mode Toggle */}
           <button
