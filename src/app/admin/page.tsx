@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
-import { PortfolioData, SkillWeapon, ExperienceItem, ProjectItem, CertificationItem, AnalyticsSummary, VisitorLog } from "@/types/portfolio";
+import { PortfolioData, SkillWeapon, ExperienceItem, ProjectItem, CertificationItem, AnalyticsSummary, VisitorLog, RadioStation } from "@/types/portfolio";
 import { BlogPost } from "@/types/blog";
+import { DEFAULT_STATIONS, getSpotifyEmbedUrl } from "@/components/GTARadioPlayer";
 import { sfx } from "@/lib/soundFx";
 import Link from "next/link";
 import { 
@@ -40,7 +41,10 @@ import {
   Edit,
   Eye,
   Heart,
-  ExternalLink
+  ExternalLink,
+  Radio,
+  Music,
+  Volume2
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -486,6 +490,26 @@ export default function AdminPage() {
       setIsUploadingAvatar(false);
       e.target.value = "";
     }
+  };
+
+  // Helpers for Radio Stations & Spotify
+  const updateRadioStation = (index: number, field: keyof RadioStation, val: string) => {
+    const list = [...(formData.radioStations && formData.radioStations.length > 0 ? formData.radioStations : DEFAULT_STATIONS)];
+    list[index] = { ...list[index], [field]: val };
+    setFormData((prev) => ({ ...prev, radioStations: list }));
+  };
+
+  const updateCustomSpotifyUrl = (url: string) => {
+    setFormData((prev) => ({ ...prev, customSpotifyUrl: url }));
+  };
+
+  const resetRadioStations = () => {
+    sfx.playClick();
+    setFormData((prev) => ({
+      ...prev,
+      radioStations: DEFAULT_STATIONS,
+      customSpotifyUrl: "https://open.spotify.com/track/3k75B7C4Ra0n65i257s2Z0",
+    }));
   };
 
   // Helpers for Skills
@@ -992,6 +1016,26 @@ export default function AdminPage() {
                 </div>
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-pink-300 border border-pink-500/30">
                   {blogs.length} POSTS
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveSection("radio");
+                  sfx.playClick();
+                }}
+                className={`w-full px-3 py-2.5 rounded-xl font-bold flex items-center justify-between gap-2 transition-all ${
+                  activeSection === "radio"
+                    ? "bg-gradient-to-r from-amber-500 to-[#ff2a85] text-white shadow-[0_0_20px_#f59e0b] scale-[1.02]"
+                    : "bg-amber-950/30 border border-amber-500/40 text-amber-300 hover:bg-amber-900/40 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-amber-400" />
+                  <span>Radio & Spotify</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-amber-300 border border-amber-500/30">
+                  4 STATIONS
                 </span>
               </button>
             </div>
@@ -2942,6 +2986,172 @@ export default function AdminPage() {
                   </table>
                 </div>
 
+              </div>
+
+            </div>
+          )}
+
+          {/* TAB 11: VICE CITY RADIO & SPOTIFY SETTINGS */}
+          {activeSection === "radio" && (
+            <div className="bg-[#140124] border border-amber-500/50 p-6 rounded-2xl space-y-6 shadow-xl animate-fadeIn">
+              
+              {/* Header */}
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-4">
+                <div>
+                  <h2 className="text-xl font-black text-white flex items-center gap-2">
+                    <Radio className="w-5 h-5 text-amber-400" />
+                    <span>VICE CITY RADIO & SPOTIFY BROADCAST SYSTEM</span>
+                  </h2>
+                  <p className="text-xs font-mono text-gray-400 mt-0.5">
+                    Configure the in-game FM stations, frequencies, default anthems, and custom Spotify playlist embeds.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={resetRadioStations}
+                    className="px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-300 hover:text-white font-mono text-xs flex items-center gap-1.5 transition-all"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                    <span>RESTORE GTA DEFAULTS</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sfx.playRadioTuning();
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-amber-950/60 border border-amber-500/50 hover:bg-amber-900 text-amber-300 font-mono text-xs font-bold flex items-center gap-1.5 transition-all"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                    <span>TEST TUNING SFX</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Master Spotify Custom Stream */}
+              <div className="p-4 rounded-xl bg-black/60 border border-cyan-500/40 space-y-3 font-mono text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-bold text-[#00f0ff] flex items-center gap-2">
+                    <Music className="w-4 h-4 text-[#1DB954]" />
+                    <span>MASTER SPOTIFY STREAM / PERSONAL PLAYLIST:</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400">Visitors can listen directly in the HUD</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={formData.customSpotifyUrl || ""}
+                    onChange={(e) => updateCustomSpotifyUrl(e.target.value)}
+                    placeholder="Paste any Spotify playlist, album, or track URL (e.g. https://open.spotify.com/playlist/...)"
+                    className="flex-1 bg-black/90 border border-gray-800 rounded-xl px-3 py-2 text-white outline-none focus:border-[#00f0ff]"
+                  />
+                  <a
+                    href={formData.customSpotifyUrl || "https://open.spotify.com/track/3k75B7C4Ra0n65i257s2Z0"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 rounded-xl bg-[#1DB954] hover:bg-[#1DB954]/80 text-black font-bold flex items-center justify-center gap-1.5 transition-all shrink-0"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>TEST LINK</span>
+                  </a>
+                </div>
+
+                {/* Live Preview Embed */}
+                {formData.customSpotifyUrl && (
+                  <div className="pt-2">
+                    <div className="text-[10px] text-gray-500 mb-1.5">LIVE EMBED PREVIEW:</div>
+                    <div className="w-full max-w-md rounded-2xl overflow-hidden border border-gray-800 bg-black">
+                      <iframe
+                        src={getSpotifyEmbedUrl(formData.customSpotifyUrl)}
+                        width="100%"
+                        height="152"
+                        frameBorder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        className="rounded-2xl"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Station Presets Editor (4 GTA FM Stations) */}
+              <div className="space-y-4">
+                <div className="text-sm font-mono font-bold text-amber-400 flex items-center gap-2">
+                  <Radio className="w-4 h-4" />
+                  <span>PRESET GTA RADIO STATIONS (OPTIONS 1 & 3):</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(formData.radioStations && formData.radioStations.length > 0 ? formData.radioStations : DEFAULT_STATIONS).map((st, idx) => (
+                    <div
+                      key={st.id || idx}
+                      className="p-4 rounded-xl bg-black/60 border border-gray-800 space-y-3 font-mono text-xs relative group"
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-gray-800/80">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={st.icon}
+                            onChange={(e) => updateRadioStation(idx, "icon", e.target.value)}
+                            className="w-8 h-8 rounded-lg bg-black border border-gray-700 text-center text-lg outline-none"
+                            title="Station Icon Emoji"
+                          />
+                          <input
+                            type="text"
+                            value={st.name}
+                            onChange={(e) => updateRadioStation(idx, "name", e.target.value)}
+                            className="font-bold text-white bg-transparent border-b border-transparent focus:border-amber-400 outline-none text-sm"
+                          />
+                        </div>
+
+                        <input
+                          type="text"
+                          value={st.frequency}
+                          onChange={(e) => updateRadioStation(idx, "frequency", e.target.value)}
+                          className="w-20 bg-black border border-gray-700 rounded-lg px-2 py-0.5 text-right font-bold text-amber-400 text-xs outline-none"
+                          title="Broadcast Frequency"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-gray-400 text-[10px] block mb-0.5">GENRE / FORMAT:</label>
+                          <input
+                            type="text"
+                            value={st.genre}
+                            onChange={(e) => updateRadioStation(idx, "genre", e.target.value)}
+                            className="w-full bg-black/80 border border-gray-800 rounded-lg px-2.5 py-1.5 text-gray-200 outline-none focus:border-amber-400 text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-gray-400 text-[10px] block mb-0.5">SPOTIFY TRACK / PLAYLIST URI OR URL:</label>
+                          <input
+                            type="text"
+                            value={st.spotifyUri}
+                            onChange={(e) => updateRadioStation(idx, "spotifyUri", e.target.value)}
+                            placeholder="track/... or playlist/..."
+                            className="w-full bg-black/80 border border-gray-800 rounded-lg px-2.5 py-1.5 text-cyan-300 font-mono outline-none focus:border-cyan-400 text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-gray-400 text-[10px] block mb-0.5">ON-AIR DESCRIPTION / ANTHEM:</label>
+                          <textarea
+                            rows={2}
+                            value={st.description}
+                            onChange={(e) => updateRadioStation(idx, "description", e.target.value)}
+                            className="w-full bg-black/80 border border-gray-800 rounded-lg p-2 text-gray-300 outline-none focus:border-amber-400 text-xs leading-relaxed"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
             </div>

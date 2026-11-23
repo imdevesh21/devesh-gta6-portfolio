@@ -4,16 +4,24 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Volume2, VolumeX, Briefcase, ShieldAlert, Gamepad2, Newspaper } from "lucide-react";
+import { Volume2, VolumeX, Briefcase, ShieldAlert, Gamepad2, Newspaper, Radio } from "lucide-react";
 import { PalmTreeIcon } from "./Icons";
 
 interface HUDProps {
   executiveMode: boolean;
   onToggleExecutiveMode: () => void;
   onOpenArcade?: () => void;
+  onToggleRadio?: () => void;
+  isRadioOpen?: boolean;
 }
 
-export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode, onOpenArcade }) => {
+export const HUD: React.FC<HUDProps> = ({ 
+  executiveMode, 
+  onToggleExecutiveMode, 
+  onOpenArcade,
+  onToggleRadio,
+  isRadioOpen
+}) => {
   const { data } = usePortfolio();
   const profile = data.profile;
 
@@ -126,6 +134,32 @@ export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode, 
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-[#00f0ff]" />}
           </button>
+
+          {/* Vice City Radio / Spotify Player Toggle */}
+          {onToggleRadio && !executiveMode && (
+            <button
+              onClick={() => {
+                sfx.playClick();
+                onToggleRadio();
+              }}
+              className={`px-2.5 py-1.5 rounded-lg border font-mono text-xs font-bold transition-all flex items-center gap-1.5 ${
+                isRadioOpen
+                  ? "bg-amber-950/80 border-amber-400 text-amber-300 shadow-[0_0_15px_#f59e0b]"
+                  : "bg-black/70 border-gray-700 hover:border-[#ff2a85] text-gray-300 hover:text-white"
+              }`}
+              title="Toggle GTA Vice City Radio & Spotify Player"
+            >
+              <Radio className={`w-3.5 h-3.5 ${isRadioOpen ? "text-amber-400 animate-pulse" : "text-[#ff2a85]"}`} />
+              <span className="hidden sm:inline">RADIO</span>
+              {isRadioOpen && (
+                <span className="flex items-center gap-0.5 h-2.5 ml-0.5">
+                  <span className="w-0.5 h-full bg-amber-400 animate-pulse" />
+                  <span className="w-0.5 h-2/3 bg-amber-400 animate-pulse" style={{ animationDelay: "0.2s" }} />
+                  <span className="w-0.5 h-full bg-amber-400 animate-pulse" style={{ animationDelay: "0.4s" }} />
+                </span>
+              )}
+            </button>
+          )}
 
           {/* Arcade Mini-Game Launcher */}
           {onOpenArcade && !executiveMode && (

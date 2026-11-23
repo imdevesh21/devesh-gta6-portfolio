@@ -81,12 +81,26 @@ export interface OperativeProfile {
   coursework: string[];
 }
 
+export interface RadioStation {
+  id: string;
+  name: string;
+  frequency: string;
+  tagline: string;
+  genre: string;
+  spotifyUri: string;
+  accentColor: string;
+  icon: string;
+  description: string;
+}
+
 export interface PortfolioData {
   profile: OperativeProfile;
   skills: SkillWeapon[];
   experiences: ExperienceItem[];
   projects: ProjectItem[];
   certifications: CertificationItem[];
+  radioStations?: RadioStation[];
+  customSpotifyUrl?: string;
 }
 
 export interface VisitorLog {

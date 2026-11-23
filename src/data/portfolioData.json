@@ -333,5 +333,52 @@
       "icon": "🔥",
       "description": "Maintained a continuous 100+ day streak solving complex algorithmic challenges across arrays, binary trees, dynamic programming, and graph algorithms."
     }
-  ]
+  ],
+  "radioStations": [
+    {
+      "id": "vice-city-fm",
+      "name": "Vice City FM",
+      "frequency": "98.3 FM",
+      "tagline": "The Official Sounds of Leonida & 80s Retrowave",
+      "genre": "Synthwave / Outrun / GTA-6 Anthem",
+      "spotifyUri": "track/3k75B7C4Ra0n65i257s2Z0",
+      "accentColor": "#ff2a85",
+      "icon": "🌴",
+      "description": "Featuring Tom Petty's 'Love Is A Long Road' (GTA VI Trailer Anthem), Kavinsky, and Miami sunset synthpop."
+    },
+    {
+      "id": "radio-los-santos",
+      "name": "Radio Los Santos",
+      "frequency": "102.7 FM",
+      "tagline": "West Coast Heat & Heavy Drill Bass",
+      "genre": "Hip-Hop / Heavy Trap / Drill",
+      "spotifyUri": "playlist/37i9dQZF1DX0XUsuxWHRQd",
+      "accentColor": "#ffb700",
+      "icon": "🔫",
+      "description": "High-octane rap and West Coast hip-hop curated for high-velocity coding and street missions."
+    },
+    {
+      "id": "leonida-lofi",
+      "name": "Leonida Lo-Fi Lounge",
+      "frequency": "94.1 FM",
+      "tagline": "Late Night Chillhop for Deep Work",
+      "genre": "Lo-Fi / Ambient / Deep Focus",
+      "spotifyUri": "playlist/37i9dQZF1DXdLEN7aqioXM",
+      "accentColor": "#00f0ff",
+      "icon": "☕",
+      "description": "Atmospheric chill beats and smooth keys designed for zero-distraction engineering sessions."
+    },
+    {
+      "id": "cyberpunk-underground",
+      "name": "Cyberpunk 2077 // Underground",
+      "frequency": "107.5 FM",
+      "tagline": "Industrial Darkwave & High-Voltage Electro",
+      "genre": "Industrial / Darkwave / Cyberpunk",
+      "spotifyUri": "playlist/37i9dQZF1EIeZt7g2t29aW",
+      "accentColor": "#a855f7",
+      "icon": "⚡",
+      "description": "Relentless electronic pulses, distorted basslines, and dystopian cybernetic anthems."
+    }
+  ],
+  "customSpotifyUrl": "https://open.spotify.com/track/3k75B7C4Ra0n65i257s2Z0"
 }

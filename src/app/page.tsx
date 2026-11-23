@@ -14,6 +14,7 @@ import { MissionPassedModal } from "../components/MissionPassedModal";
 import { CheatCodeTerminal } from "../components/CheatCodeTerminal";
 import { CinematicIntro } from "../components/CinematicIntro";
 import { RecruiterExecutiveView } from "../components/RecruiterExecutiveView";
+import { GTARadioPlayer } from "../components/GTARadioPlayer";
 import { ProjectItem } from "../types/portfolio";
 import { sfx } from "../lib/soundFx";
 import { Terminal } from "lucide-react";
@@ -24,10 +25,22 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
   const [isPhoneOpen, setIsPhoneOpen] = useState<boolean>(false);
   const [isTerminalOpen, setIsTerminalOpen] = useState<boolean>(false);
+  const [isRadioOpen, setIsRadioOpen] = useState<boolean>(false);
+  const [isRadioMinimized, setIsRadioMinimized] = useState<boolean>(false);
 
   const handleTabChange = (tabId: string) => {
     sfx.playClick();
     setActiveTab(tabId);
+  };
+
+  const handleToggleRadio = () => {
+    if (!isRadioOpen) {
+      sfx.playRadioTuning();
+      setIsRadioOpen(true);
+      setIsRadioMinimized(false);
+    } else {
+      setIsRadioOpen(false);
+    }
   };
 
   return (
@@ -41,6 +54,8 @@ export default function Home() {
         executiveMode={executiveMode}
         onToggleExecutiveMode={() => setExecutiveMode(!executiveMode)}
         onOpenArcade={() => handleTabChange("arcade")}
+        onToggleRadio={handleToggleRadio}
+        isRadioOpen={isRadioOpen}
       />
 
       {executiveMode ? (
@@ -171,6 +186,8 @@ export default function Home() {
             isOpen={isPhoneOpen}
             onToggle={() => setIsPhoneOpen(!isPhoneOpen)}
             onOpenArcade={() => handleTabChange("arcade")}
+            onToggleRadio={handleToggleRadio}
+            isRadioOpen={isRadioOpen}
           />
 
           {/* 8. Mission Passed Modal with Confetti & Synth Flourish */}
@@ -184,6 +201,15 @@ export default function Home() {
             isOpen={isTerminalOpen}
             onClose={() => setIsTerminalOpen(false)}
             onOpenArcade={() => handleTabChange("arcade")}
+            onToggleRadio={handleToggleRadio}
+          />
+
+          {/* 10. Vice City Radio & Spotify Player (Option 1 + Option 3) */}
+          <GTARadioPlayer
+            isOpen={isRadioOpen}
+            onClose={() => setIsRadioOpen(false)}
+            isMinimized={isRadioMinimized}
+            onToggleMinimize={() => setIsRadioMinimized(!isRadioMinimized)}
           />
 
         </div>

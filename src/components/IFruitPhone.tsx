@@ -11,9 +11,17 @@ interface IFruitPhoneProps {
   isOpen: boolean;
   onToggle: () => void;
   onOpenArcade?: () => void;
+  onToggleRadio?: () => void;
+  isRadioOpen?: boolean;
 }
 
-export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle, onOpenArcade }) => {
+export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ 
+  isOpen, 
+  onToggle, 
+  onOpenArcade,
+  onToggleRadio,
+  isRadioOpen
+}) => {
   const { data } = usePortfolio();
   const profile = data.profile;
 
@@ -33,8 +41,13 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle, onOp
   }, []);
 
   const handleToggleRadio = () => {
-    const active = sfx.toggleRadio();
-    setIsRadioOn(active);
+    if (onToggleRadio) {
+      sfx.playClick();
+      onToggleRadio();
+    } else {
+      const active = sfx.toggleRadio();
+      setIsRadioOn(active);
+    }
   };
 
   return (
@@ -153,18 +166,18 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle, onOp
             <button
               onClick={handleToggleRadio}
               className={`p-2.5 rounded-2xl transition-all flex flex-col items-center justify-center gap-1 group border ${
-                isRadioOn
+                (isRadioOpen ?? isRadioOn)
                   ? "bg-amber-950/80 border-amber-400 shadow-[0_0_12px_#f59e0b]"
                   : "bg-rose-950/60 border-rose-500/50 hover:bg-rose-900/60"
               }`}
             >
               <Radio
                 className={`w-5 h-5 ${
-                  isRadioOn ? "text-amber-300 animate-pulse" : "text-rose-400 group-hover:scale-110"
+                  (isRadioOpen ?? isRadioOn) ? "text-amber-300 animate-pulse" : "text-rose-400 group-hover:scale-110"
                 }`}
               />
               <span className="text-rose-300 font-bold">
-                {isRadioOn ? "Playing" : "Radio"}
+                {(isRadioOpen ?? isRadioOn) ? "Playing" : "Radio"}
               </span>
             </button>
 

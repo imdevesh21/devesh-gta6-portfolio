@@ -10,9 +10,10 @@ interface CheatCodeTerminalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenArcade?: () => void;
+  onToggleRadio?: () => void;
 }
 
-export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, onClose, onOpenArcade }) => {
+export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, onClose, onOpenArcade, onToggleRadio }) => {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([
@@ -42,6 +43,7 @@ export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, on
     switch (cmd) {
       case "HELP":
         newLogs.push("AVAILABLE CHEAT CODES:");
+        newLogs.push("  RADIO     - Tune in to GTA Vice City FM & Spotify Player");
         newLogs.push("  BLOG      - Read Weazel News & Classified Tech Dispatches");
         newLogs.push("  ARCADE    - Launch Leonida Highway Pursuit 60FPS Game");
         newLogs.push("  ADMIN     - Hack security protocol & enter Admin Panel");
@@ -50,6 +52,15 @@ export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, on
         newLogs.push("  GODMODE   - Max out Operative Health & Armor (100%)");
         newLogs.push("  BOUNTY    - Grant $5,000,000 computational value");
         newLogs.push("  CLEAR     - Wipe terminal history");
+        break;
+
+      case "RADIO":
+      case "MUSIC":
+      case "SPOTIFY":
+      case "SONGS":
+        newLogs.push(">>> TUNING IN TO GTA VICE CITY FM & SPOTIFY BROADCAST NETWORK...");
+        sfx.playRadioTuning();
+        if (onToggleRadio) onToggleRadio();
         break;
 
       case "BLOG":
