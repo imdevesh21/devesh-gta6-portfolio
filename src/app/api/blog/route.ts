@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
     const baseSlug = body.slug
       ? body.slug.toLowerCase().replace(/[^a-z0-9]+/g, "-")
       : body.title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "");
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
 
     let slug = baseSlug;
     let count = 1;
@@ -73,9 +73,10 @@ export async function POST(req: NextRequest) {
       videoUrl: body.videoUrl || "",
       category: body.category || "Architecture",
       tags: Array.isArray(body.tags) ? body.tags : (body.tags ? body.tags.split(",").map((s: string) => s.trim()) : []),
-      author: body.author || {
-        name: "Devesh Sharma",
-        role: "Lead Systems Architect & Full-Stack Operative",
+      author: {
+        name: body.author?.name || "Devesh Sharma",
+        role: body.author?.role || "Lead Systems Architect & Full-Stack Operative",
+        avatar: body.author?.avatar || "https://github.com/imdevesh21.png",
       },
       publishedAt: new Date().toISOString().split("T")[0],
       status: body.status || "published",

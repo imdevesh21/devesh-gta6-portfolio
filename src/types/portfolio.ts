@@ -53,6 +53,7 @@ export interface OperativeProfile {
   name: string;
   codename: string;
   title: string;
+  avatarUrl?: string;
   wantedLevel: number;
   bounty: string;
   location: string;

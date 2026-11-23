@@ -197,11 +197,24 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle, onOp
 
           {/* Quick Contact Card Readout */}
           <div className="bg-black/80 p-3.5 rounded-xl border border-gray-800 space-y-2 font-mono text-xs">
-            <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">
-              OPERATIVE PROFILE CARD
-            </div>
-            <div className="text-white font-black text-sm">
-              {profile.name}
+            <div className="flex items-center gap-3">
+              {profile.avatarUrl ? (
+                <div className="w-10 h-10 rounded-full border border-[#00f0ff] p-0.5 shadow-[0_0_10px_#00f0ff] shrink-0 overflow-hidden">
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.name}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+              ) : null}
+              <div className="flex-1">
+                <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">
+                  OPERATIVE PROFILE CARD
+                </div>
+                <div className="text-white font-black text-sm">
+                  {profile.name}
+                </div>
+              </div>
             </div>
             <div className="text-[#00f0ff] font-bold">
               {profile.contact.phone}

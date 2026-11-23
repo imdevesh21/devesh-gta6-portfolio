@@ -21,8 +21,16 @@ export const DossierTab: React.FC = () => {
             LSPD CASE #021
           </div>
 
-          <div className="w-32 h-32 mx-auto rounded-full border-2 border-[#00f0ff] p-1 shadow-[0_0_25px_#00f0ff] relative my-3 bg-gradient-to-br from-purple-900 via-pink-900 to-amber-900 flex items-center justify-center text-5xl group cursor-pointer hover:scale-105 transition-transform">
-            🕶️
+          <div className="w-32 h-32 mx-auto rounded-full border-2 border-[#00f0ff] p-1 shadow-[0_0_25px_#00f0ff] relative my-3 bg-gradient-to-br from-purple-900 via-pink-900 to-amber-900 flex items-center justify-center group cursor-pointer hover:scale-105 transition-transform overflow-hidden">
+            {profile.avatarUrl ? (
+              <img
+                src={profile.avatarUrl}
+                alt={profile.name}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <span className="text-5xl">🕶️</span>
+            )}
             <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-emerald-500 border-2 border-black flex items-center justify-center text-[10px]">
               ⚡
             </div>

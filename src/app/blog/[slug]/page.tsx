@@ -354,7 +354,7 @@ export default function SingleBlogArticlePage() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#ff2a85] to-[#00f0ff] p-0.5 shadow-[0_0_15px_#ff2a85]">
                   <img
-                    src={post.author.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"}
+                    src={post.author.avatar || "https://github.com/imdevesh21.png"}
                     alt={post.author.name}
                     className="w-full h-full object-cover rounded-full"
                   />
@@ -429,7 +429,7 @@ export default function SingleBlogArticlePage() {
           <div className="p-6 rounded-3xl bg-[#140124]/90 border border-[#00f0ff]/50 shadow-[0_0_30px_rgba(0,240,255,0.15)] flex flex-col sm:flex-row items-center gap-5 font-mono">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#ff2a85] to-[#00f0ff] p-0.5 shrink-0 shadow-[0_0_20px_#ff2a85]">
               <img
-                src={post.author.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"}
+                src={post.author.avatar || "https://github.com/imdevesh21.png"}
                 alt={post.author.name}
                 className="w-full h-full object-cover rounded-2xl"
               />
