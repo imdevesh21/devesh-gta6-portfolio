@@ -1,23 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
+import { getBlogs, saveBlogs } from "@/lib/cloudStorage";
 import defaultBlogs from "@/data/blogs.json";
 import { BlogPost } from "@/types/blog";
-
-const BLOGS_FILE_PATH = path.join(process.cwd(), "src", "data", "blogs.json");
-
-async function readBlogs(): Promise<BlogPost[]> {
-  try {
-    const fileContent = await fs.readFile(BLOGS_FILE_PATH, "utf-8");
-    return JSON.parse(fileContent);
-  } catch {
-    return defaultBlogs as unknown as BlogPost[];
-  }
-}
-
-async function writeBlogs(blogs: BlogPost[]): Promise<void> {
-  await fs.writeFile(BLOGS_FILE_PATH, JSON.stringify(blogs, null, 2), "utf-8");
-}
 
 // GET /api/blog - Fetch all published/draft blogs
 export async function GET(req: NextRequest) {
@@ -26,7 +10,7 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const search = searchParams.get("search");
 
-    let blogs = await readBlogs();
+    let blogs = await getBlogs();
 
     if (category && category !== "All") {
       blogs = blogs.filter((b) => b.category.toLowerCase() === category.toLowerCase());
@@ -61,7 +45,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Title and excerpt are required" }, { status: 400 });
     }
 
-    const blogs = await readBlogs();
+    const blogs = await getBlogs();
 
     // Auto-generate slug if not provided
     const baseSlug = body.slug
@@ -102,7 +86,7 @@ export async function POST(req: NextRequest) {
     };
 
     blogs.unshift(newPost);
-    await writeBlogs(blogs);
+    await saveBlogs(blogs);
 
     return NextResponse.json({ success: true, message: "Blog dispatch published", blog: newPost });
   } catch (error) {
@@ -119,7 +103,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Post ID is required for update" }, { status: 400 });
     }
 
-    const blogs = await readBlogs();
+    const blogs = await getBlogs();
     const index = blogs.findIndex((b) => b.id === body.id || b.slug === body.slug);
 
     if (index === -1) {
@@ -135,7 +119,7 @@ export async function PUT(req: NextRequest) {
     };
 
     blogs[index] = updatedPost;
-    await writeBlogs(blogs);
+    await saveBlogs(blogs);
 
     return NextResponse.json({ success: true, message: "Blog dispatch updated", blog: updatedPost });
   } catch (error) {
@@ -154,14 +138,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Missing ID query param" }, { status: 400 });
     }
 
-    const blogs = await readBlogs();
+    const blogs = await getBlogs();
     const filtered = blogs.filter((b) => b.id !== id && b.slug !== id);
 
     if (filtered.length === blogs.length) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    await writeBlogs(filtered);
+    await saveBlogs(filtered);
     return NextResponse.json({ success: true, message: "Blog dispatch deleted" });
   } catch (error) {
     console.error("Failed to delete blog:", error);

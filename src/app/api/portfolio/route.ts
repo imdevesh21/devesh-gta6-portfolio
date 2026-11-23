@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
-import defaultData from "@/data/portfolioData.json";
+import { getPortfolioData, savePortfolioData } from "@/lib/cloudStorage";
 import { PortfolioData } from "@/types/portfolio";
-
-const DATA_FILE_PATH = path.join(process.cwd(), "src", "data", "portfolioData.json");
 
 export async function GET() {
   try {
-    const fileContent = await fs.readFile(DATA_FILE_PATH, "utf-8");
-    const data = JSON.parse(fileContent);
+    const data = await getPortfolioData();
     return NextResponse.json(data);
   } catch {
-    // If file doesn't exist or failed to parse, return bundled default
-    return NextResponse.json(defaultData);
+    return NextResponse.json({ error: "Failed to read portfolio data" }, { status: 500 });
   }
 }
 
@@ -36,18 +30,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Write formatted JSON to file for persistent disk updates
-    await fs.writeFile(DATA_FILE_PATH, JSON.stringify(updatedData, null, 2), "utf-8");
+    const result = await savePortfolioData(updatedData);
 
     return NextResponse.json({
       success: true,
       message: "Portfolio database updated successfully",
+      storage: result.storage,
       data: updatedData,
     });
   } catch (error) {
     console.error("Failed to update portfolio data:", error);
     return NextResponse.json(
-      { error: "Failed to persist data to disk" },
+      { error: "Failed to persist data" },
       { status: 500 }
     );
   }

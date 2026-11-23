@@ -153,7 +153,14 @@
         "Maintain and patch live high-availability services across both frontend and backend clusters, resolving production defects with zero downtime."
       ],
       "keyMetric": "40–60% Faster API Data Fetching",
-      "techStack": ["Next.js", "Node.js", "TypeScript", "SQL", "ERP Architecture", "API Optimization"]
+      "techStack": [
+        "Next.js",
+        "Node.js",
+        "TypeScript",
+        "SQL",
+        "ERP Architecture",
+        "API Optimization"
+      ]
     },
     {
       "id": "simplified-learning",
@@ -171,7 +178,13 @@
         "Co-developed a real-time student community powered by Next.js, Node.js, and Socket.io for low-latency live engagement."
       ],
       "keyMetric": "Full Platform Ownership & 1-on-1 Payment Escrow",
-      "techStack": ["Next.js", "Node.js", "Socket.io", "Payment Gateway", "Full Stack Development"]
+      "techStack": [
+        "Next.js",
+        "Node.js",
+        "Socket.io",
+        "Payment Gateway",
+        "Full Stack Development"
+      ]
     },
     {
       "id": "outlier-ai",
@@ -189,7 +202,13 @@
         "Collaborated asynchronously with a global squad of 20+ contributors, enforcing rigorous annotation quality standards."
       ],
       "keyMetric": "~15% Improvement in Model Benchmarks",
-      "techStack": ["RLHF", "LLM Fine-Tuning", "Prompt Engineering", "Adversarial Testing", "Code Generation"]
+      "techStack": [
+        "RLHF",
+        "LLM Fine-Tuning",
+        "Prompt Engineering",
+        "Adversarial Testing",
+        "Code Generation"
+      ]
     },
     {
       "id": "zentek-infosoft",
@@ -206,7 +225,14 @@
         "Built interactive executive dashboards using VLOOKUP, pivot tables, and conditional formatting, reviewed weekly by senior analysts."
       ],
       "keyMetric": "Automated Multi-source Python ETL Pipeline",
-      "techStack": ["Python", "Excel Automation", "Data Cleaning", "ETL", "VLOOKUP", "Pivot Tables"]
+      "techStack": [
+        "Python",
+        "Excel Automation",
+        "Data Cleaning",
+        "ETL",
+        "VLOOKUP",
+        "Pivot Tables"
+      ]
     }
   ],
   "projects": [
@@ -224,7 +250,14 @@
         "Designed an intuitive React-based popup UI for keyword management, filter toggles, and mode switching — fully operable inside the active tab.",
         "Result: Reduced developer feed noise by ~80%, significantly improving signal-to-noise ratio for active job seekers."
       ],
-      "techStack": ["React.js", "TypeScript", "Vite", "Chrome Extensions API", "JavaScript", "DOM Caching"],
+      "techStack": [
+        "React.js",
+        "TypeScript",
+        "Vite",
+        "Chrome Extensions API",
+        "JavaScript",
+        "DOM Caching"
+      ],
       "githubUrl": "https://github.com/imdevesh21"
     },
     {
@@ -241,7 +274,13 @@
         "Styled entirely with SCSS using modular, BEM-structured stylesheets — maintaining design consistency across responsive breakpoints with zero CSS framework dependency.",
         "Result: Achieved 90+ Lighthouse performance score on Vercel deployment with optimized LCP, FID, and CLS scores."
       ],
-      "techStack": ["React.js", "SCSS / Sass", "Advanced React Hooks", "Lighthouse", "Vercel"],
+      "techStack": [
+        "React.js",
+        "SCSS / Sass",
+        "Advanced React Hooks",
+        "Lighthouse",
+        "Vercel"
+      ],
       "githubUrl": "https://github.com/imdevesh21",
       "liveUrl": "https://deveshportfolio.vercel.app"
     },
@@ -258,7 +297,13 @@
         "Implemented a dynamic job listing page where roles can be added and filtered client-side — designed to serve as a lightweight alternative to a full CMS for small agencies.",
         "Focused on conversion-optimised UI/UX: clear CTAs, fast load times, and mobile-first responsive layout across all sections."
       ],
-      "techStack": ["React.js", "JavaScript", "HTML5", "CSS3", "Responsive UI/UX"],
+      "techStack": [
+        "React.js",
+        "JavaScript",
+        "HTML5",
+        "CSS3",
+        "Responsive UI/UX"
+      ],
       "githubUrl": "https://github.com/imdevesh21"
     }
   ],
