@@ -1,5 +1,21 @@
 [
   {
+    "id": "log-1795410497031-m7dt",
+    "timestamp": 1795410497031,
+    "date": "2026-11-23",
+    "month": "2026-11",
+    "time": "10:38:17",
+    "ip": "Anonymized",
+    "country": "India",
+    "city": "Jaipur",
+    "device": "Desktop",
+    "browser": "Chrome",
+    "os": "Windows",
+    "referrer": "Direct Uplink",
+    "visitorId": "vis-49ep9jq",
+    "isNew": false
+  },
+  {
     "id": "log-1795371030203-jdto",
     "timestamp": 1795371030203,
     "date": "2026-11-22",

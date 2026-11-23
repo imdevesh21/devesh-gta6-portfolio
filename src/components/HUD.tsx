@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Volume2, VolumeX, Briefcase, ShieldAlert } from "lucide-react";
+import { Volume2, VolumeX, Briefcase, ShieldAlert, Gamepad2 } from "lucide-react";
 import { PalmTreeIcon } from "./Icons";
 
 interface HUDProps {
   executiveMode: boolean;
   onToggleExecutiveMode: () => void;
+  onOpenArcade?: () => void;
 }
 
-export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode }) => {
+export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode, onOpenArcade }) => {
   const { data } = usePortfolio();
   const profile = data.profile;
 
@@ -124,6 +125,21 @@ export const HUD: React.FC<HUDProps> = ({ executiveMode, onToggleExecutiveMode }
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-[#00f0ff]" />}
           </button>
+
+          {/* Arcade Mini-Game Launcher */}
+          {onOpenArcade && !executiveMode && (
+            <button
+              onClick={() => {
+                sfx.playArcadeBoost();
+                onOpenArcade();
+              }}
+              className="px-2.5 py-1.5 rounded-lg bg-black/70 border border-[#00f0ff]/50 hover:border-[#ff2a85] text-[#00f0ff] hover:text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,240,255,0.25)] hover:shadow-[0_0_15px_#ff2a85]"
+              title="Play Leonida Drift Arcade Game"
+            >
+              <Gamepad2 className="w-3.5 h-3.5 text-[#00f0ff]" />
+              <span className="hidden sm:inline">ARCADE</span>
+            </button>
+          )}
 
           {/* Recruiter Executive Mode Toggle */}
           <button

@@ -25,11 +25,10 @@ export const StreetCredTab: React.FC = () => {
         {certs.map((cert, idx) => (
           <div
             key={cert.id || idx}
-            className={`bg-[#140124]/90 p-6 rounded-2xl space-y-4 shadow-lg border ${
-              idx % 2 === 0
-                ? "border-[#00f0ff]/60 shadow-[0_0_25px_rgba(0,240,255,0.25)]"
-                : "border-[#ff2a85]/60 shadow-[0_0_25px_rgba(255,42,133,0.25)]"
-            } ${idx === certs.length - 1 && certs.length % 2 !== 0 ? "md:col-span-2" : ""}`}
+            className={`bg-[#140124]/90 p-6 rounded-2xl space-y-4 shadow-lg border ${idx % 2 === 0
+              ? "border-[#00f0ff]/60 shadow-[0_0_25px_rgba(0,240,255,0.25)]"
+              : "border-[#ff2a85]/60 shadow-[0_0_25px_rgba(255,42,133,0.25)]"
+              } ${idx === certs.length - 1 && certs.length % 2 !== 0 ? "md:col-span-2" : ""}`}
           >
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-xl bg-cyan-950/60 border border-cyan-500/50 flex items-center justify-center text-3xl">

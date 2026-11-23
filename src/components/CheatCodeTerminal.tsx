@@ -9,9 +9,10 @@ import { useRouter } from "next/navigation";
 interface CheatCodeTerminalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenArcade?: () => void;
 }
 
-export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, onClose }) => {
+export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, onClose, onOpenArcade }) => {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([
@@ -41,12 +42,25 @@ export const CheatCodeTerminal: React.FC<CheatCodeTerminalProps> = ({ isOpen, on
     switch (cmd) {
       case "HELP":
         newLogs.push("AVAILABLE CHEAT CODES:");
+        newLogs.push("  ARCADE    - Launch Leonida Highway Pursuit 60FPS Game");
         newLogs.push("  ADMIN     - Hack security protocol & enter Admin Panel");
         newLogs.push("  LEETCODE  - Unlock 150+ DSA algorithmic firestorm");
         newLogs.push("  SPEED     - Activate 40-60% API latency boost");
         newLogs.push("  GODMODE   - Max out Operative Health & Armor (100%)");
         newLogs.push("  BOUNTY    - Grant $5,000,000 computational value");
         newLogs.push("  CLEAR     - Wipe terminal history");
+        break;
+
+      case "ARCADE":
+      case "PLAY":
+      case "GAME":
+      case "DRIVE":
+        newLogs.push(">>> INITIALIZING 60FPS RETRO HIGHWAY ARCADE PURSUIT...");
+        sfx.playArcadeBoost();
+        setTimeout(() => {
+          onClose();
+          if (onOpenArcade) onOpenArcade();
+        }, 500);
         break;
 
       case "ADMIN":

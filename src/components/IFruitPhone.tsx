@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Phone, Mail, Radio, MessageSquare, ChevronDown } from "lucide-react";
+import { Phone, Mail, Radio, MessageSquare, ChevronDown, Gamepad2 } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./Icons";
 
 interface IFruitPhoneProps {
   isOpen: boolean;
   onToggle: () => void;
+  onOpenArcade?: () => void;
 }
 
-export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) => {
+export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle, onOpenArcade }) => {
   const { data } = usePortfolio();
   const profile = data.profile;
 
@@ -164,6 +165,19 @@ export const IFruitPhone: React.FC<IFruitPhoneProps> = ({ isOpen, onToggle }) =>
               <span className="text-rose-300 font-bold">
                 {isRadioOn ? "Playing" : "Radio"}
               </span>
+            </button>
+
+            {/* Arcade Game App */}
+            <button
+              onClick={() => {
+                sfx.playArcadeBoost();
+                if (onOpenArcade) onOpenArcade();
+                onToggle();
+              }}
+              className="p-2.5 bg-gradient-to-tr from-[#ff2a85]/40 to-[#00f0ff]/40 border border-[#00f0ff]/60 rounded-2xl hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 group shadow-[0_0_12px_rgba(0,240,255,0.25)] col-span-3 sm:col-span-1"
+            >
+              <Gamepad2 className="w-5 h-5 text-cyan-300 group-hover:rotate-12 transition-transform" />
+              <span className="text-cyan-200 font-bold">Arcade</span>
             </button>
           </div>
 

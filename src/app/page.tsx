@@ -8,6 +8,7 @@ import { WeaponWheelTab } from "../components/WeaponWheelTab";
 import { HeistCampaignTab } from "../components/HeistCampaignTab";
 import { ContractsTab } from "../components/ContractsTab";
 import { StreetCredTab } from "../components/StreetCredTab";
+import { ArcadeTab } from "../components/ArcadeTab";
 import { IFruitPhone } from "../components/IFruitPhone";
 import { MissionPassedModal } from "../components/MissionPassedModal";
 import { CheatCodeTerminal } from "../components/CheatCodeTerminal";
@@ -39,6 +40,7 @@ export default function Home() {
       <HUD
         executiveMode={executiveMode}
         onToggleExecutiveMode={() => setExecutiveMode(!executiveMode)}
+        onOpenArcade={() => handleTabChange("arcade")}
       />
 
       {executiveMode ? (
@@ -136,6 +138,17 @@ export default function Home() {
                   <span>🏆</span>
                   <span>Street Cred (Certs)</span>
                 </button>
+
+                <button
+                  onClick={() => handleTabChange("arcade")}
+                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === "arcade"
+                      ? "bg-gradient-to-r from-[#ff2a85] to-[#00f0ff] text-white shadow-[0_0_20px_#ff2a85] scale-102"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                    }`}
+                >
+                  <span className="animate-pulse">🕹️</span>
+                  <span>Vice Arcade</span>
+                </button>
               </div>
             </nav>
 
@@ -148,6 +161,7 @@ export default function Home() {
                 <ContractsTab onInspectProject={(p) => setSelectedProject(p)} />
               )}
               {activeTab === "trophies" && <StreetCredTab />}
+              {activeTab === "arcade" && <ArcadeTab />}
             </main>
 
           </div>
@@ -156,6 +170,7 @@ export default function Home() {
           <IFruitPhone
             isOpen={isPhoneOpen}
             onToggle={() => setIsPhoneOpen(!isPhoneOpen)}
+            onOpenArcade={() => handleTabChange("arcade")}
           />
 
           {/* 8. Mission Passed Modal with Confetti & Synth Flourish */}
@@ -168,6 +183,7 @@ export default function Home() {
           <CheatCodeTerminal
             isOpen={isTerminalOpen}
             onClose={() => setIsTerminalOpen(false)}
+            onOpenArcade={() => handleTabChange("arcade")}
           />
 
         </div>
