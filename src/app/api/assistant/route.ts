@@ -15,31 +15,43 @@ export async function POST(req: NextRequest) {
     const p = data.profile;
     const lower = q.toLowerCase();
 
-    // Optional Gemini API enhancement if GEMINI_API_KEY is configured in environment
+    // Gemini AI enhancement when GEMINI_API_KEY is configured
     const geminiKey = process.env.GEMINI_API_KEY;
     if (geminiKey) {
-      try {
-        const prompt = `You are Lester, an energetic GTA-style AI Operative Assistant for ${p.name}'s developer portfolio. Answer the recruiter's question concisely (max 4 sentences) using ONLY this verified portfolio data:\n\nProfile: ${p.name}, ${p.title}, ${p.location}, CGPA ${p.education.cgpa} (${p.education.institution}). Summary: ${p.summary}\nExperiences: ${data.experiences.map((e) => `${e.role} at ${e.company} (${e.period}) - ${e.keyMetric}`).join("; ")}\nProjects: ${data.projects.map((pr) => `${pr.title}: ${pr.impactHighlight}`).join("; ")}\nSkills: ${data.skills.map((s) => s.name).join(", ")}\n\nQuestion: ${q}`;
+      const prompt = `You are Lester, an energetic GTA-style AI Operative Assistant embedded inside ${p.name}'s developer portfolio.
+If the user asks a general question (like math, coding, greetings, etc.), answer it accurately and concisely in Lester's fun style.
+If the user asks about ${p.name}, answer concisely (max 4 sentences) using this verified portfolio data:
 
-        const aiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-            }),
+Profile: ${p.name}, ${p.title}, ${p.location}, CGPA ${p.education.cgpa} (${p.education.institution}). Summary: ${p.summary}
+Experiences: ${data.experiences.map((e) => `${e.role} at ${e.company} (${e.period}) - ${e.keyMetric}`).join("; ")}
+Projects: ${data.projects.map((pr) => `${pr.title}: ${pr.impactHighlight}`).join("; ")}
+Skills: ${data.skills.map((s) => s.name).join(", ")}
+Resume Download: /api/resume (${p.resumeFileName || "Devesh_Sharma_Resume.pdf"})
+
+User Question: ${q}`;
+
+      for (const model of ["gemini-3-flash-preview", "gemini-3.8-flash", "gemini-2.5-flash-lite"]) {
+        try {
+          const aiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+              }),
+            }
+          );
+          if (aiRes.ok) {
+            const aiJson = await aiRes.json();
+            const text = aiJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              return NextResponse.json({ success: true, reply: text, source: model });
+            }
           }
-        );
-        if (aiRes.ok) {
-          const aiJson = await aiRes.json();
-          const text = aiJson?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            return NextResponse.json({ success: true, reply: text, source: "gemini" });
-          }
+        } catch {
+          // Try next model
         }
-      } catch {
-        // Fall through to built-in deterministic operative responder
       }
     }
 
