@@ -6,7 +6,7 @@ import { LazyReveal } from "./ui/LazyReveal";
 import { TiltCard } from "./TiltCard";
 import { GithubIcon } from "./Icons";
 import { sfx } from "@/lib/soundFx";
-import { MapPin, Star, GitFork, ExternalLink, Radar, Code2 } from "lucide-react";
+import { MapPin, Star, GitFork, ExternalLink, Radar, Code2, Flame, Trophy } from "lucide-react";
 
 interface GitHubRepo {
   id: number;
@@ -254,6 +254,59 @@ export const GitHubAndMapSection: React.FC = () => {
           </TiltCard>
         </LazyReveal>
       </div>
+
+      {/* LeetCode & DSA Streak Telemetry Bar */}
+      <LazyReveal variant="fade-up" delayMs={120}>
+        <TiltCard glowColor="amber" className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <div className="md:col-span-5 space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-950/70 border border-amber-500/40 font-mono text-[10px] font-bold text-amber-300">
+                <Flame className="w-3 h-3 text-amber-400" />
+                <span>100+ DAY ACTIVE STREAK</span>
+              </div>
+              <h3 className="text-xl font-black text-white flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-[#ffb700]" />
+                <span>LEETCODE &amp; DSA ARSENAL</span>
+              </h3>
+              <p className="text-xs text-gray-300 leading-relaxed font-sans">
+                150+ algorithmic problems solved across LeetCode, GeeksforGeeks &amp; Coding Ninjas — specializing in Arrays, Trees, Graphs &amp; Dynamic Programming.
+              </p>
+            </div>
+
+            <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
+              <div className="bg-black/60 p-3.5 rounded-xl border border-emerald-500/35 space-y-2">
+                <div className="flex justify-between font-bold">
+                  <span className="text-emerald-400">EASY</span>
+                  <span className="text-white">65+</span>
+                </div>
+                <div className="w-full h-2 bg-gray-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-400 w-[82%]" />
+                </div>
+              </div>
+
+              <div className="bg-black/60 p-3.5 rounded-xl border border-amber-500/35 space-y-2">
+                <div className="flex justify-between font-bold">
+                  <span className="text-amber-400">MEDIUM</span>
+                  <span className="text-white">70+</span>
+                </div>
+                <div className="w-full h-2 bg-gray-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-400 w-[70%]" />
+                </div>
+              </div>
+
+              <div className="bg-black/60 p-3.5 rounded-xl border border-rose-500/35 space-y-2">
+                <div className="flex justify-between font-bold">
+                  <span className="text-rose-400">HARD</span>
+                  <span className="text-white">18+</span>
+                </div>
+                <div className="w-full h-2 bg-gray-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-rose-400 w-[40%]" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </TiltCard>
+      </LazyReveal>
     </div>
   );
 };

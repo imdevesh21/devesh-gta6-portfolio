@@ -86,3 +86,11 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #00f0ff;
 }
+
+/* Live HUD Theme Presets */
+html[data-theme="gold"] body {
+  filter: hue-rotate(32deg) saturate(1.1);
+}
+html[data-theme="matrix"] body {
+  filter: hue-rotate(140deg) saturate(1.05);
+}

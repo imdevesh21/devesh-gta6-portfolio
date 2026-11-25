@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { sfx } from "@/lib/soundFx";
-import { Bot, X, Send, Sparkles } from "lucide-react";
+import { Bot, X, Send, Sparkles, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 
 interface ChatMessage {
   role: "bot" | "user";
@@ -20,6 +20,8 @@ export const LesterAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "bot",
@@ -32,6 +34,62 @@ export const LesterAssistant: React.FC = () => {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
+
+  const speakText = (text: string) => {
+    if (!voiceEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const clean = text.replace(/[*_`#]/g, "");
+      const utter = new SpeechSynthesisUtterance(clean);
+      utter.rate = 1.05;
+      utter.pitch = 0.95;
+      window.speechSynthesis.speak(utter);
+    } catch {}
+  };
+
+  const toggleVoiceInput = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRec =
+      (window as unknown as { SpeechRecognition?: new () => unknown; webkitSpeechRecognition?: new () => unknown })
+        .SpeechRecognition ||
+      (window as unknown as { webkitSpeechRecognition?: new () => unknown }).webkitSpeechRecognition;
+
+    if (!SpeechRec) {
+      alert("Voice input is supported in Chrome / Edge browsers.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const rec = new SpeechRec() as {
+        lang: string;
+        interimResults: boolean;
+        onresult: (e: { results: { 0: { 0: { transcript: string } } } }) => void;
+        onerror: () => void;
+        onend: () => void;
+        start: () => void;
+      };
+      rec.lang = "en-US";
+      rec.interimResults = false;
+      setIsListening(true);
+      sfx.playClick();
+      rec.onresult = (event) => {
+        const transcript = event.results?.[0]?.[0]?.transcript;
+        if (transcript) {
+          askQuestion(transcript);
+        }
+      };
+      rec.onerror = () => setIsListening(false);
+      rec.onend = () => setIsListening(false);
+      rec.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
 
   const askQuestion = async (text: string) => {
     const q = text.trim();
@@ -50,13 +108,15 @@ export const LesterAssistant: React.FC = () => {
       });
       const json = await res.json();
       sfx.playBleep();
+      const replyText = json.reply || "Comms glitch — check the Dossier or download /api/resume!";
       setMessages((prev) => [
         ...prev,
         {
           role: "bot",
-          text: json.reply || "Comms glitch — check the Dossier or download /api/resume!",
+          text: replyText,
         },
       ]);
+      speakText(replyText);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -98,12 +158,32 @@ export const LesterAssistant: React.FC = () => {
                 <div className="text-[9px] text-emerald-400">ONLINE • LIVE RESUME INTEL</div>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg bg-black/60 border border-white/10 text-gray-400 hover:text-white"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !voiceEnabled;
+                  setVoiceEnabled(next);
+                  if (!next && typeof window !== "undefined" && "speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                  }
+                }}
+                className={`p-1.5 rounded-lg border text-xs transition-colors ${
+                  voiceEnabled
+                    ? "bg-[#00f0ff]/20 border-[#00f0ff] text-[#00f0ff]"
+                    : "bg-black/60 border-white/10 text-gray-400 hover:text-white"
+                }`}
+                title={voiceEnabled ? "Mute Lester Voice" : "Enable Lester Voice Reply"}
+              >
+                {voiceEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-lg bg-black/60 border border-white/10 text-gray-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -158,6 +238,18 @@ export const LesterAssistant: React.FC = () => {
               placeholder="Ask about skills, projects..."
               className="flex-1 bg-black/70 border border-gray-700 focus:border-[#00f0ff] rounded-xl px-3 py-2 text-xs text-white font-mono outline-none"
             />
+            <button
+              type="button"
+              onClick={toggleVoiceInput}
+              className={`p-2 rounded-xl border transition-all ${
+                isListening
+                  ? "bg-red-500 border-red-400 text-white animate-pulse"
+                  : "bg-black/70 border-gray-700 hover:border-[#ff2a85] text-gray-300 hover:text-white"
+              }`}
+              title="Speak your question"
+            >
+              {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+            </button>
             <button
               type="submit"
               disabled={loading}

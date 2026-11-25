@@ -15,6 +15,7 @@ import {
   Radio,
   Menu,
   X,
+  Palette,
 } from "lucide-react";
 import { PalmTreeIcon } from "./Icons";
 
@@ -42,6 +43,21 @@ export const HUD: React.FC<HUDProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [wantedStars, setWantedStars] = useState(profile.wantedLevel || 5);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [themeMode, setThemeMode] = useState<"vice" | "gold" | "matrix">("vice");
+
+  const cycleTheme = () => {
+    const order: Array<"vice" | "gold" | "matrix"> = ["vice", "gold", "matrix"];
+    const next = order[(order.indexOf(themeMode) + 1) % order.length];
+    setThemeMode(next);
+    sfx.playClick();
+    if (typeof document !== "undefined") {
+      if (next === "vice") {
+        document.documentElement.removeAttribute("data-theme");
+      } else {
+        document.documentElement.setAttribute("data-theme", next);
+      }
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -132,6 +148,15 @@ export const HUD: React.FC<HUDProps> = ({
 
           {/* Desktop Action Pills */}
           <div className="hidden lg:flex items-center gap-1.5">
+            <button
+              onClick={cycleTheme}
+              className="p-2 rounded-lg bg-black/65 border border-white/15 hover:border-[#ffb700] text-gray-300 hover:text-white transition-colors flex items-center gap-1"
+              title={`Theme: ${themeMode.toUpperCase()} (Click to switch)`}
+            >
+              <Palette className="w-3.5 h-3.5 text-[#ffb700]" />
+              <span className="hidden xl:inline text-[10px] uppercase">{themeMode}</span>
+            </button>
+
             <button
               onClick={handleMuteToggle}
               className="p-2 rounded-lg bg-black/65 border border-white/15 hover:border-[#ff2a85] text-gray-300 hover:text-white transition-colors"
