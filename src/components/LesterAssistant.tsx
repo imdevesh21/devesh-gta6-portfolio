@@ -68,14 +68,14 @@ export const LesterAssistant: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 z-40">
+    <div className="fixed bottom-3 left-3 sm:bottom-4 sm:left-4 z-40">
       {!isOpen ? (
         <button
           onClick={() => {
             sfx.playBleep();
             setIsOpen(true);
           }}
-          className="group flex items-center gap-2.5 px-4 py-3 rounded-2xl glass-vice border border-[#00f0ff]/60 shadow-[0_0_25px_rgba(0,240,255,0.35)] hover:scale-105 active:scale-95 transition-all font-mono text-xs"
+          className="group flex items-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl glass-vice border border-[#00f0ff]/60 shadow-[0_0_25px_rgba(0,240,255,0.35)] hover:scale-105 active:scale-95 transition-all font-mono text-xs"
           title="Ask Lester AI about Devesh"
         >
           <div className="relative">
@@ -88,7 +88,7 @@ export const LesterAssistant: React.FC = () => {
           </div>
         </button>
       ) : (
-        <div className="w-[330px] sm:w-[370px] glass-vice border-2 border-[#00f0ff]/60 rounded-3xl shadow-[0_0_40px_rgba(0,240,255,0.3)] overflow-hidden flex flex-col max-h-[480px]">
+        <div className="w-[calc(100vw-1.5rem)] sm:w-[370px] glass-vice border-2 border-[#00f0ff]/60 rounded-3xl shadow-[0_0_40px_rgba(0,240,255,0.3)] overflow-hidden flex flex-col max-h-[80vh] sm:max-h-[480px]">
           {/* Header */}
           <div className="px-4 py-3 bg-black/70 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2 font-mono">

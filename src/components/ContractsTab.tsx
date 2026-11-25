@@ -37,7 +37,7 @@ export const ContractsTab: React.FC<ContractsTabProps> = ({ onInspectProject }) 
       </LazyReveal>
 
       {/* Grid of Contracts */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {projects.map((project, idx) => {
           const glowColor =
             idx % 3 === 0 ? "pink" : idx % 3 === 1 ? "cyan" : "amber";

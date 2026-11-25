@@ -307,14 +307,14 @@ export const NavbarMiniGame: React.FC<NavbarMiniGameProps> = ({ onEarnCash }) =>
   }, [status, onEarnCash]);
 
   return (
-    <div className="hidden md:flex items-center gap-2 bg-black/75 border border-[#ff2a85]/45 rounded-xl px-2 py-1 shadow-[0_0_18px_rgba(255,42,133,0.2)]">
+    <div className="hidden sm:flex items-center gap-2 bg-black/75 border border-[#ff2a85]/45 rounded-xl px-2 py-1 shadow-[0_0_18px_rgba(255,42,133,0.2)]">
       {/* Mini Game Canvas */}
       <div
         onClick={triggerJump}
         className="relative rounded-lg overflow-hidden border border-white/10 cursor-pointer select-none group"
         title={status === "playing" ? "Click or Press SPACE to Jump!" : "Click to Play Vice Chase"}
       >
-        <canvas ref={canvasRef} width={220} height={38} className="block" />
+        <canvas ref={canvasRef} width={220} height={38} className="block w-[145px] md:w-[190px] lg:w-[220px] h-[34px] md:h-[38px]" />
 
         {status === "idle" && (
           <div className="absolute inset-0 bg-black/45 flex items-center justify-center gap-1.5 backdrop-blur-[1px] group-hover:bg-black/25 transition-colors">

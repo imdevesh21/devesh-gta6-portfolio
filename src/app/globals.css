@@ -5,12 +5,22 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
-    @apply bg-[#0c0119] text-white selection:bg-[#ff2a85] selection:text-white;
+    @apply bg-[#0c0119] text-white selection:bg-[#ff2a85] selection:text-white overflow-x-hidden;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+}
+
+/* Hide scrollbars for horizontal mobile dock */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* GTA Stylized Title */

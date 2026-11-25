@@ -46,7 +46,7 @@ export const ParallaxHero: React.FC<ParallaxHeroProps> = ({
         mouseDepth={16}
         className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center"
       >
-        <div className="w-[380px] h-[380px] sm:w-[500px] sm:h-[500px] rounded-full bg-gradient-to-b from-[#ffb700]/30 via-[#ff2a85]/25 to-transparent blur-3xl opacity-80" />
+        <div className="w-[260px] h-[260px] sm:w-[460px] sm:h-[460px] rounded-full bg-gradient-to-b from-[#ffb700]/30 via-[#ff2a85]/25 to-transparent blur-3xl opacity-80" />
       </ParallaxLayer>
 
       {/* LAYER 2: Secondary Open-Domain Palm / Ocean Texture Strip */}
@@ -109,26 +109,26 @@ export const ParallaxHero: React.FC<ParallaxHeroProps> = ({
               <span>WELCOME TO LEONIDA // {profile.codename.toUpperCase()}</span>
             </div>
 
-            <h1 className="gta-title text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-wider">
+            <h1 className="gta-title text-4xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-wider">
               {profile.name}
             </h1>
 
-            <p className="text-lg sm:text-xl font-mono font-bold text-[#00f0ff] tracking-wide drop-shadow-[0_0_12px_rgba(0,240,255,0.45)]">
+            <p className="text-sm sm:text-xl font-mono font-bold text-[#00f0ff] tracking-wide drop-shadow-[0_0_12px_rgba(0,240,255,0.45)]">
               {profile.title}
             </p>
 
-            <p className="text-sm sm:text-base text-gray-200 max-w-2xl mx-auto lg:mx-0 leading-relaxed bg-black/35 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+            <p className="text-xs sm:text-base text-gray-200 max-w-2xl mx-auto lg:mx-0 leading-relaxed bg-black/35 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-white/10">
               {profile.summary}
             </p>
 
             {/* Primary CTAs */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2 font-mono text-xs">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-2 font-mono text-xs">
               <button
                 onClick={() => {
                   sfx.playWeapon();
                   onJumpToSection("contracts");
                 }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-black tracking-widest uppercase shadow-[0_0_25px_rgba(255,42,133,0.6)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                className="w-full sm:w-auto justify-center px-5 sm:px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-black tracking-widest uppercase shadow-[0_0_25px_rgba(255,42,133,0.6)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
               >
                 <span>EXPLORE BOUNTIES</span>
                 <ChevronDown className="w-4 h-4" />
@@ -138,7 +138,7 @@ export const ParallaxHero: React.FC<ParallaxHeroProps> = ({
                 href="/api/resume"
                 download={profile.resumeFileName || "Devesh_Sharma_Resume.pdf"}
                 onClick={() => sfx.playBleep()}
-                className="px-6 py-3 rounded-xl bg-black/70 backdrop-blur-md border border-[#00f0ff]/60 text-[#00f0ff] hover:bg-[#00f0ff] hover:text-black font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all flex items-center gap-2"
+                className="w-full sm:w-auto justify-center px-5 sm:px-6 py-3 rounded-xl bg-black/70 backdrop-blur-md border border-[#00f0ff]/60 text-[#00f0ff] hover:bg-[#00f0ff] hover:text-black font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 <span>DOWNLOAD RESUME</span>
@@ -150,7 +150,7 @@ export const ParallaxHero: React.FC<ParallaxHeroProps> = ({
                   sfx.playBleep();
                   if (onOpenHireModal) onOpenHireModal();
                 }}
-                className="px-5 py-3 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white hover:border-[#ff2a85] hover:text-[#ff85b8] font-black tracking-widest uppercase transition-all flex items-center gap-2"
+                className="w-full sm:w-auto justify-center px-5 py-3 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white hover:border-[#ff2a85] hover:text-[#ff85b8] font-black tracking-widest uppercase transition-all flex items-center gap-2"
               >
                 <Mail className="w-4 h-4" />
                 <span>RECRUIT</span>

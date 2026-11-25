@@ -62,7 +62,7 @@ export const HireMeModal: React.FC<HireMeModalProps> = ({ isOpen, onClose }) => 
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg glass-vice border-2 border-[#ff2a85]/70 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(255,42,133,0.35)] space-y-5"
+        className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto glass-vice border-2 border-[#ff2a85]/70 rounded-3xl p-5 sm:p-8 shadow-[0_0_50px_rgba(255,42,133,0.35)] space-y-5"
       >
         <button
           onClick={onClose}

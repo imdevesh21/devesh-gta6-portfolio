@@ -125,24 +125,24 @@ export default function Home() {
             onOpenHireModal={() => setIsHireModalOpen(true)}
           />
 
-          {/* 6. Sticky Glassmorphic Mission Dock */}
-          <div className="sticky top-[62px] z-40 max-w-7xl mx-auto px-4 mb-10">
-            <nav className="glass-vice border border-[#ff2a85]/40 rounded-2xl p-2 shadow-[0_10px_40px_rgba(0,0,0,0.65)]">
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+          {/* 6. Sticky Glassmorphic Mission Dock (1-Row Scrollable on Mobile/Tablet, 7-Col Grid on Desktop) */}
+          <div className="sticky top-[58px] sm:top-[62px] z-40 max-w-7xl mx-auto px-3 sm:px-4 mb-8 sm:mb-10">
+            <nav className="glass-vice border border-[#ff2a85]/40 rounded-2xl p-1.5 sm:p-2 shadow-[0_10px_40px_rgba(0,0,0,0.65)]">
+              <div className="flex overflow-x-auto no-scrollbar snap-x lg:grid lg:grid-cols-7 gap-1.5 sm:gap-2">
                 {NAV_SECTIONS.map((item) => {
                   const isActive = activeTab === item.id;
                   return (
                     <button
                       key={item.id}
                       onClick={() => jumpToSection(item.id)}
-                      className={`py-2.5 px-3 rounded-xl font-mono text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 select-none ${
+                      className={`shrink-0 snap-start py-2 px-3 sm:px-3.5 rounded-xl font-mono text-[11px] sm:text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 sm:gap-2 select-none ${
                         isActive
                           ? `bg-gradient-to-r ${item.accent} text-white shadow-[0_0_20px_rgba(255,42,133,0.45)] scale-[1.02]`
                           : "bg-black/50 border border-white/10 text-gray-300 hover:text-white hover:border-[#00f0ff]/50 hover:bg-white/5"
                       }`}
                     >
-                      <span className="text-base">{item.icon}</span>
-                      <span className="truncate">{item.label}</span>
+                      <span className="text-sm sm:text-base">{item.icon}</span>
+                      <span className="whitespace-nowrap">{item.label}</span>
                     </button>
                   );
                 })}
