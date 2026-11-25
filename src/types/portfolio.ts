@@ -54,6 +54,9 @@ export interface OperativeProfile {
   codename: string;
   title: string;
   avatarUrl?: string;
+  resumeUrl?: string;
+  resumeFileName?: string;
+  resumeUpdatedAt?: string;
   wantedLevel: number;
   bounty: string;
   location: string;

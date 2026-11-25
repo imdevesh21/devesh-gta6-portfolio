@@ -2,7 +2,7 @@
 
 import React from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
-import { Mail, Phone, ExternalLink, Printer } from "lucide-react";
+import { Mail, Phone, ExternalLink, Printer, Download } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./Icons";
 
 export const RecruiterExecutiveView: React.FC = () => {
@@ -31,13 +31,24 @@ export const RecruiterExecutiveView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg border border-slate-700 text-xs font-semibold transition-all shadow-sm"
-        >
-          <Printer className="w-4 h-4 text-cyan-400" />
-          <span>Print / Export PDF</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href="/api/resume"
+            download={profile.resumeFileName || "Devesh_Sharma_Resume.pdf"}
+            className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-sm"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download Resume (PDF)</span>
+          </a>
+
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg border border-slate-700 text-xs font-semibold transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4 text-cyan-400" />
+            <span>Print View</span>
+          </button>
+        </div>
       </div>
 
       {/* Contact & Links Bar */}

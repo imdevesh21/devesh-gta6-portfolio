@@ -2,8 +2,12 @@ import fs from "fs/promises";
 import path from "path";
 import defaultBlogs from "@/data/blogs.json";
 import defaultPortfolio from "@/data/portfolioData.json";
+import defaultPhotos from "@/data/photos.json";
+import defaultInquiries from "@/data/inquiries.json";
 import { BlogPost } from "@/types/blog";
 import { PortfolioData } from "@/types/portfolio";
+import { PhotoItem } from "@/types/photo";
+import { RecruiterInquiry } from "@/types/inquiry";
 import { Redis } from "@upstash/redis";
 
 // Check if Upstash Redis or Vercel KV environment variables are present
@@ -25,12 +29,20 @@ if (redisUrl && redisToken) {
 // In-Memory Runtime Caches (Used when deployed on serverless with read-only filesystem)
 let memBlogs: BlogPost[] | null = null;
 let memPortfolio: PortfolioData | null = null;
+let memPhotos: PhotoItem[] | null = null;
+let memInquiries: RecruiterInquiry[] | null = null;
 
 const BLOGS_FILE_PATH = path.join(process.cwd(), "src", "data", "blogs.json");
 const TMP_BLOGS_PATH = path.join("/tmp", "blogs.json");
 
 const PORTFOLIO_FILE_PATH = path.join(process.cwd(), "src", "data", "portfolioData.json");
 const TMP_PORTFOLIO_PATH = path.join("/tmp", "portfolioData.json");
+
+const PHOTOS_FILE_PATH = path.join(process.cwd(), "src", "data", "photos.json");
+const TMP_PHOTOS_PATH = path.join("/tmp", "photos.json");
+
+const INQUIRIES_FILE_PATH = path.join(process.cwd(), "src", "data", "inquiries.json");
+const TMP_INQUIRIES_PATH = path.join("/tmp", "inquiries.json");
 
 /* =========================================================================
    1. BLOG STORAGE ENGINE
@@ -185,4 +197,143 @@ export async function savePortfolioData(data: PortfolioData): Promise<{ success:
 
 export function isCloudRedisConfigured(): boolean {
   return Boolean(redisClient);
+}
+
+/* =========================================================================
+   3. PHOTOHOLIC GALLERY STORAGE ENGINE
+   ========================================================================= */
+
+export async function getPhotos(): Promise<PhotoItem[]> {
+  if (redisClient) {
+    try {
+      const data = await redisClient.get<PhotoItem[]>("leonida_photos");
+      if (data && Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+      await redisClient.set("leonida_photos", defaultPhotos);
+      return defaultPhotos as unknown as PhotoItem[];
+    } catch (err) {
+      console.warn("Redis get photos error, falling back to local files:", err);
+    }
+  }
+
+  if (memPhotos) {
+    return memPhotos;
+  }
+
+  try {
+    const tmpContent = await fs.readFile(TMP_PHOTOS_PATH, "utf-8");
+    const parsed = JSON.parse(tmpContent);
+    if (Array.isArray(parsed)) {
+      memPhotos = parsed;
+      return parsed;
+    }
+  } catch {}
+
+  try {
+    const fileContent = await fs.readFile(PHOTOS_FILE_PATH, "utf-8");
+    const parsed = JSON.parse(fileContent);
+    memPhotos = parsed;
+    return parsed;
+  } catch {
+    memPhotos = defaultPhotos as unknown as PhotoItem[];
+    return defaultPhotos as unknown as PhotoItem[];
+  }
+}
+
+export async function savePhotos(photos: PhotoItem[]): Promise<{ success: boolean; storage: string }> {
+  memPhotos = photos;
+
+  if (redisClient) {
+    try {
+      await redisClient.set("leonida_photos", photos);
+      return { success: true, storage: "upstash_redis" };
+    } catch (err) {
+      console.warn("Redis set photos error:", err);
+    }
+  }
+
+  try {
+    await fs.writeFile(PHOTOS_FILE_PATH, JSON.stringify(photos, null, 2), "utf-8");
+    return { success: true, storage: "local_disk" };
+  } catch (fsErr: unknown) {
+    const errCode = (fsErr as { code?: string })?.code;
+    if (errCode === "EROFS" || errCode === "ENOENT") {
+      try {
+        await fs.writeFile(TMP_PHOTOS_PATH, JSON.stringify(photos, null, 2), "utf-8");
+        return { success: true, storage: "serverless_tmp" };
+      } catch {
+        return { success: true, storage: "in_memory" };
+      }
+    }
+    throw fsErr;
+  }
+}
+
+/* =========================================================================
+   4. RECRUITER INQUIRIES STORAGE ENGINE
+   ========================================================================= */
+
+export async function getInquiries(): Promise<RecruiterInquiry[]> {
+  if (redisClient) {
+    try {
+      const data = await redisClient.get<RecruiterInquiry[]>("leonida_inquiries");
+      if (data && Array.isArray(data)) return data;
+      return defaultInquiries as unknown as RecruiterInquiry[];
+    } catch (err) {
+      console.warn("Redis get inquiries error:", err);
+    }
+  }
+
+  if (memInquiries) return memInquiries;
+
+  try {
+    const tmpContent = await fs.readFile(TMP_INQUIRIES_PATH, "utf-8");
+    const parsed = JSON.parse(tmpContent);
+    if (Array.isArray(parsed)) {
+      memInquiries = parsed;
+      return parsed;
+    }
+  } catch {}
+
+  try {
+    const fileContent = await fs.readFile(INQUIRIES_FILE_PATH, "utf-8");
+    const parsed = JSON.parse(fileContent);
+    memInquiries = parsed;
+    return parsed;
+  } catch {
+    memInquiries = defaultInquiries as unknown as RecruiterInquiry[];
+    return defaultInquiries as unknown as RecruiterInquiry[];
+  }
+}
+
+export async function saveInquiries(
+  inquiries: RecruiterInquiry[]
+): Promise<{ success: boolean; storage: string }> {
+  memInquiries = inquiries;
+
+  if (redisClient) {
+    try {
+      await redisClient.set("leonida_inquiries", inquiries);
+      return { success: true, storage: "upstash_redis" };
+    } catch (err) {
+      console.warn("Redis set inquiries error:", err);
+    }
+  }
+
+  try {
+    await fs.writeFile(INQUIRIES_FILE_PATH, JSON.stringify(inquiries, null, 2), "utf-8");
+    return { success: true, storage: "local_disk" };
+  } catch (fsErr: unknown) {
+    const errCode = (fsErr as { code?: string })?.code;
+    if (errCode === "EROFS" || errCode === "ENOENT") {
+      try {
+        await fs.writeFile(TMP_INQUIRIES_PATH, JSON.stringify(inquiries, null, 2), "utf-8");
+        return { success: true, storage: "serverless_tmp" };
+      } catch {
+        return { success: true, storage: "in_memory" };
+      }
+    }
+    throw fsErr;
+  }
 }

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { PortfolioData, SkillWeapon, ExperienceItem, ProjectItem, CertificationItem, AnalyticsSummary, VisitorLog, RadioStation } from "@/types/portfolio";
 import { BlogPost } from "@/types/blog";
+import { PhotoItem, PhotoCategory } from "@/types/photo";
+import { RecruiterInquiry } from "@/types/inquiry";
 import { DEFAULT_STATIONS, getSpotifyEmbedUrl } from "@/components/GTARadioPlayer";
 import { sfx } from "@/lib/soundFx";
 import Link from "next/link";
@@ -44,7 +46,11 @@ import {
   ExternalLink,
   Radio,
   Music,
-  Volume2
+  Volume2,
+  Camera,
+  KeyRound,
+  EyeOff,
+  FileText
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -55,10 +61,14 @@ export default function AdminPage() {
   const [saveStatus, setSaveStatus] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  // Security PIN Authentication State
+  // Security PIN & Password Authentication State
   const MASTER_PIN = "12487766";
+  const MASTER_PASSWORDS = ["12487766", "devesh@2026"];
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [authMode, setAuthMode] = useState<"keypad" | "password">("keypad");
   const [enteredPin, setEnteredPin] = useState<string>("");
+  const [passwordInput, setPasswordInput] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [pinError, setPinError] = useState<string>("");
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [shakeLock, setShakeLock] = useState<boolean>(false);
@@ -133,8 +143,177 @@ export default function AdminPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchBlogs();
+      fetchPhotos();
+      fetchInquiries();
     }
   }, [isAuthenticated]);
+
+  // Recruiter Inquiries Inbox State
+  const [inquiries, setInquiries] = useState<RecruiterInquiry[]>([]);
+
+  const fetchInquiries = async () => {
+    try {
+      const res = await fetch("/api/inquiries");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.inquiries) setInquiries(json.inquiries);
+      }
+    } catch (err) {
+      console.error("Failed to fetch inquiries:", err);
+    }
+  };
+
+  const handleToggleInquiryStatus = async (inq: RecruiterInquiry) => {
+    const nextStatus = inq.status === "new" ? "reviewed" : "new";
+    sfx.playClick();
+    try {
+      const res = await fetch("/api/inquiries", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: inq.id, status: nextStatus }),
+      });
+      if (res.ok) {
+        setInquiries((prev) =>
+          prev.map((item) => (item.id === inq.id ? { ...item, status: nextStatus } : item))
+        );
+      }
+    } catch {}
+  };
+
+  const handleDeleteInquiry = async (id: string) => {
+    if (!confirm("Delete this recruiter inquiry?")) return;
+    sfx.playWeapon();
+    try {
+      const res = await fetch(`/api/inquiries?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setInquiries((prev) => prev.filter((item) => item.id !== id));
+      }
+    } catch {}
+  };
+
+  // Photoholic Pinterest Gallery CMS State
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState<boolean>(false);
+  const [isSavingPhoto, setIsSavingPhoto] = useState<boolean>(false);
+  const [newPhoto, setNewPhoto] = useState<{
+    title: string;
+    caption: string;
+    imageUrl: string;
+    category: PhotoCategory;
+    location: string;
+    camera: string;
+    aspectRatio: "portrait" | "landscape" | "square";
+    featured: boolean;
+  }>({
+    title: "",
+    caption: "",
+    imageUrl: "",
+    category: "Street",
+    location: "Jaipur // Leonida",
+    camera: "50mm f/1.8",
+    aspectRatio: "portrait",
+    featured: false,
+  });
+
+  const fetchPhotos = async () => {
+    try {
+      const res = await fetch("/api/photos");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.photos) setPhotos(json.photos);
+      }
+    } catch (err) {
+      console.error("Failed to load photos:", err);
+    }
+  };
+
+  const handlePhotoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    sfx.playClick();
+    setIsUploadingPhoto(true);
+    try {
+      const formPayload = new FormData();
+      formPayload.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formPayload });
+      const data = await res.json();
+      if (data.url) {
+        setNewPhoto((prev) => ({
+          ...prev,
+          imageUrl: data.url,
+          title: prev.title || file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " "),
+        }));
+        sfx.playArcadePickup();
+        setSaveStatus(`Photo uploaded: ${data.fileName}`);
+        setTimeout(() => setSaveStatus(""), 3500);
+      } else {
+        alert(data.error || "Upload failed");
+      }
+    } catch (err) {
+      console.error("Photo upload error:", err);
+      alert("Failed to upload photo");
+    } finally {
+      setIsUploadingPhoto(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleAddPhoto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPhoto.title || !newPhoto.imageUrl) {
+      alert("Please upload a photo or paste an image URL, and add a title.");
+      return;
+    }
+    sfx.playClick();
+    setIsSavingPhoto(true);
+    try {
+      const res = await fetch("/api/photos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPhoto),
+      });
+      const json = await res.json();
+      if (json.success) {
+        sfx.playMissionPassed();
+        try { confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } }); } catch {}
+        setSaveStatus("PHOTO PINNED TO PHOTOHOLIC BOARD!");
+        setTimeout(() => setSaveStatus(""), 3500);
+        setNewPhoto({
+          title: "",
+          caption: "",
+          imageUrl: "",
+          category: "Street",
+          location: "Jaipur // Leonida",
+          camera: "50mm f/1.8",
+          aspectRatio: "portrait",
+          featured: false,
+        });
+        fetchPhotos();
+      } else {
+        alert(json.error || "Failed to pin photo");
+      }
+    } catch (err) {
+      console.error("Pin photo error:", err);
+      alert("Network error while pinning photo");
+    } finally {
+      setIsSavingPhoto(false);
+    }
+  };
+
+  const handleDeletePhoto = async (id: string, title: string) => {
+    if (!confirm(`Remove "${title}" from Photoholic Board?`)) return;
+    sfx.playWeapon();
+    try {
+      const res = await fetch(`/api/photos?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setPhotos((prev) => prev.filter((p) => p.id !== id));
+        setSaveStatus("PHOTO REMOVED FROM BOARD");
+        setTimeout(() => setSaveStatus(""), 3000);
+      }
+    } catch (err) {
+      console.error("Delete photo error:", err);
+    }
+  };
 
   const handleMediaUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -290,7 +469,7 @@ export default function AdminPage() {
   }, [initialData]);
 
   const verifyPin = (pinToTest: string) => {
-    if (pinToTest === MASTER_PIN) {
+    if (pinToTest === MASTER_PIN || MASTER_PASSWORDS.includes(pinToTest.trim())) {
       sfx.playMissionPassed();
       try {
         sessionStorage.setItem("gta6_admin_auth", "true");
@@ -298,16 +477,22 @@ export default function AdminPage() {
       } catch {}
       setIsAuthenticated(true);
       setPinError("");
+      setPasswordInput("");
       try {
         confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
       } catch {}
     } else {
       sfx.playWasted();
-      setPinError("🚨 ACCESS DENIED: INVALID CLEARANCE PIN. FIB SURVEILLANCE ACTIVE.");
+      setPinError("🚨 ACCESS DENIED: INVALID CLEARANCE PIN / PASSWORD.");
       setShakeLock(true);
       setTimeout(() => setShakeLock(false), 600);
       setEnteredPin("");
     }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    verifyPin(passwordInput);
   };
 
   const handleKeypadPress = (val: string) => {
@@ -324,11 +509,6 @@ export default function AdminPage() {
         verifyPin(next);
       }
     }
-  };
-
-  const handlePinFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    verifyPin(enteredPin);
   };
 
   const handleLockVault = () => {
@@ -457,6 +637,56 @@ export default function AdminPage() {
 
   // Profile Avatar Upload Handler
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
+  const [isUploadingResume, setIsUploadingResume] = useState<boolean>(false);
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith(".pdf") && file.type !== "application/pdf") {
+      alert("Please select a valid PDF (.pdf) file.");
+      e.target.value = "";
+      return;
+    }
+
+    sfx.playClick();
+    setIsUploadingResume(true);
+    try {
+      const formPayload = new FormData();
+      formPayload.append("file", file);
+
+      const res = await fetch("/api/resume", {
+        method: "POST",
+        body: formPayload,
+      });
+      const json = await res.json();
+      if (json.success) {
+        setFormData((prev) => ({
+          ...prev,
+          profile: {
+            ...prev.profile,
+            resumeUrl: json.resumeUrl,
+            resumeFileName: json.resumeFileName,
+            resumeUpdatedAt: json.resumeUpdatedAt,
+          },
+        }));
+        sfx.playMissionPassed();
+        try {
+          confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } });
+        } catch {}
+        setSaveStatus(`RESUME UPDATED: ${json.resumeFileName} (LIVE FOR RECRUITERS!)`);
+        setTimeout(() => setSaveStatus(""), 4500);
+      } else {
+        alert(json.error || "Failed to upload resume");
+      }
+    } catch (err) {
+      console.error("Resume upload error:", err);
+      alert("Network error while uploading resume PDF");
+    } finally {
+      setIsUploadingResume(false);
+      e.target.value = "";
+    }
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -703,80 +933,142 @@ export default function AdminPage() {
             </p>
           </div>
 
-          {/* Masked PIN Display */}
-          <div className="mb-6 space-y-2">
-            <div className="text-[10px] text-gray-400 text-center tracking-wider uppercase font-bold">
-              ENTER 8-DIGIT CLEARANCE PIN
-            </div>
-
-            <div className="flex items-center justify-center gap-2 py-3 px-4 bg-black/80 rounded-2xl border border-gray-700 shadow-inner">
-              {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => {
-                const isFilled = idx < enteredPin.length;
-                return (
-                  <div
-                    key={idx}
-                    className={`w-4 h-4 rounded-full border transition-all duration-150 ${
-                      isFilled
-                        ? "bg-[#00f0ff] border-[#00f0ff] shadow-[0_0_10px_#00f0ff] scale-110"
-                        : "bg-gray-900 border-gray-700"
-                    }`}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Error Message */}
-            {pinError && (
-              <div className="text-center text-xs text-red-400 font-bold bg-red-950/80 p-2.5 rounded-xl border border-red-500/50 animate-pulse">
-                {pinError}
-              </div>
-            )}
-          </div>
-
-          {/* Numeric Keypad Grid */}
-          <div className="grid grid-cols-3 gap-2.5 mb-5">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9", "CLEAR", "0", "UNLOCK"].map((btn) => {
-              return (
-                <button
-                  key={btn}
-                  type="button"
-                  onClick={() => {
-                    if (btn === "UNLOCK") {
-                      verifyPin(enteredPin);
-                    } else {
-                      handleKeypadPress(btn);
-                    }
-                  }}
-                  className={`h-11 rounded-xl font-mono font-bold text-sm transition-all active:scale-95 flex items-center justify-center ${
-                    btn === "CLEAR"
-                      ? "bg-red-950/60 border border-red-500/50 text-red-300 hover:bg-red-900/60"
-                      : btn === "UNLOCK"
-                      ? "bg-gradient-to-r from-[#00f0ff] to-[#00b4d8] text-black font-black hover:opacity-90 shadow-[0_0_15px_rgba(0,240,255,0.4)]"
-                      : "bg-[#1d0333]/90 border border-purple-500/30 text-white hover:border-[#00f0ff] hover:text-[#00f0ff] hover:bg-[#250442]"
-                  }`}
-                >
-                  {btn === "CLEAR" ? "CLR" : btn === "UNLOCK" ? <Lock className="w-4 h-4" /> : btn}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Direct Keyboard Form Input */}
-          <form onSubmit={handlePinFormSubmit} className="mb-4">
-            <input
-              type="password"
-              inputMode="numeric"
-              maxLength={8}
-              value={enteredPin}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, "");
-                setEnteredPin(val);
-                if (val.length === 8) verifyPin(val);
+          {/* Clickable Auth Method Selector */}
+          <div className="grid grid-cols-2 gap-2 p-1 bg-black/70 rounded-2xl border border-white/10 mb-5">
+            <button
+              type="button"
+              onClick={() => {
+                sfx.playClick();
+                setAuthMode("keypad");
+                setPinError("");
               }}
-              placeholder="Or type PIN on keyboard..."
-              className="w-full text-center bg-black/50 border border-gray-700 focus:border-[#ff2a85] rounded-xl py-2 px-3 text-sm text-[#00f0ff] font-mono tracking-widest placeholder:text-gray-600 focus:outline-none"
-            />
-          </form>
+              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                authMode === "keypad"
+                  ? "bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white shadow-[0_0_15px_rgba(255,42,133,0.45)]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>PIN KEYPAD</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                sfx.playClick();
+                setAuthMode("password");
+                setPinError("");
+              }}
+              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                authMode === "password"
+                  ? "bg-gradient-to-r from-[#00f0ff] to-[#00a8ff] text-black shadow-[0_0_15px_rgba(0,240,255,0.45)]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>PASSWORD LOGIN</span>
+            </button>
+          </div>
+
+          {authMode === "keypad" ? (
+            <>
+              {/* Masked PIN Display */}
+              <div className="mb-5 space-y-2">
+                <div className="text-[10px] text-gray-400 text-center tracking-wider uppercase font-bold">
+                  ENTER 8-DIGIT CLEARANCE PIN
+                </div>
+
+                <div className="flex items-center justify-center gap-2 py-3 px-4 bg-black/80 rounded-2xl border border-gray-700 shadow-inner">
+                  {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => {
+                    const isFilled = idx < enteredPin.length;
+                    return (
+                      <div
+                        key={idx}
+                        className={`w-4 h-4 rounded-full border transition-all duration-150 ${
+                          isFilled
+                            ? "bg-[#00f0ff] border-[#00f0ff] shadow-[0_0_10px_#00f0ff] scale-110"
+                            : "bg-gray-900 border-gray-700"
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {pinError && (
+                  <div className="text-center text-xs text-red-400 font-bold bg-red-950/80 p-2.5 rounded-xl border border-red-500/50 animate-pulse">
+                    {pinError}
+                  </div>
+                )}
+              </div>
+
+              {/* Numeric Keypad Grid */}
+              <div className="grid grid-cols-3 gap-2.5 mb-5">
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9", "CLEAR", "0", "UNLOCK"].map((btn) => (
+                  <button
+                    key={btn}
+                    type="button"
+                    onClick={() => {
+                      if (btn === "UNLOCK") {
+                        verifyPin(enteredPin);
+                      } else {
+                        handleKeypadPress(btn);
+                      }
+                    }}
+                    className={`h-11 rounded-xl font-mono font-bold text-sm transition-all active:scale-95 flex items-center justify-center ${
+                      btn === "CLEAR"
+                        ? "bg-red-950/60 border border-red-500/50 text-red-300 hover:bg-red-900/60"
+                        : btn === "UNLOCK"
+                        ? "bg-gradient-to-r from-[#00f0ff] to-[#00b4d8] text-black font-black hover:opacity-90 shadow-[0_0_15px_rgba(0,240,255,0.4)]"
+                        : "bg-[#1d0333]/90 border border-purple-500/30 text-white hover:border-[#00f0ff] hover:text-[#00f0ff] hover:bg-[#250442]"
+                    }`}
+                  >
+                    {btn === "CLEAR" ? "CLR" : btn === "UNLOCK" ? <Lock className="w-4 h-4" /> : btn}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            /* Password Login Mode with Clickable Button */
+            <form onSubmit={handlePasswordSubmit} className="space-y-4 mb-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-[#00f0ff] tracking-wider uppercase font-bold block">
+                  ADMIN PASSWORD / MASTER PIN
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    placeholder="Enter password or PIN..."
+                    autoFocus
+                    className="w-full bg-black/75 border border-gray-700 focus:border-[#00f0ff] rounded-xl py-3 pl-4 pr-11 text-sm text-white font-mono placeholder:text-gray-600 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {pinError && (
+                <div className="text-center text-xs text-red-400 font-bold bg-red-950/80 p-2.5 rounded-xl border border-red-500/50 animate-pulse">
+                  {pinError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-black tracking-widest text-xs uppercase shadow-[0_0_20px_rgba(255,42,133,0.45)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <KeyRound className="w-4 h-4" />
+                <span>LOGIN WITH PASSWORD</span>
+              </button>
+            </form>
+          )}
 
           {/* Back to Public Portfolio Link */}
           <div className="text-center pt-2 border-t border-gray-800">
@@ -1038,6 +1330,46 @@ export default function AdminPage() {
                   4 STATIONS
                 </span>
               </button>
+
+              <button
+                onClick={() => {
+                  setActiveSection("photos");
+                  sfx.playClick();
+                }}
+                className={`w-full px-3 py-2.5 rounded-xl font-bold flex items-center justify-between gap-2 transition-all ${
+                  activeSection === "photos"
+                    ? "bg-gradient-to-r from-[#ff2a85] to-[#00f0ff] text-white shadow-[0_0_20px_#ff2a85] scale-[1.02]"
+                    : "bg-pink-950/30 border border-pink-500/40 text-pink-300 hover:bg-pink-900/40 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-[#00f0ff]" />
+                  <span>Photoholic Board</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-[#00f0ff] border border-cyan-500/30">
+                  {photos.length} PINS
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveSection("inquiries");
+                  sfx.playClick();
+                }}
+                className={`w-full px-3 py-2.5 rounded-xl font-bold flex items-center justify-between gap-2 transition-all ${
+                  activeSection === "inquiries"
+                    ? "bg-gradient-to-r from-emerald-500 to-[#00f0ff] text-black shadow-[0_0_20px_#10b981] scale-[1.02]"
+                    : "bg-emerald-950/30 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/40 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-emerald-400" />
+                  <span>Recruiter Inbox</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-emerald-300 border border-emerald-500/30">
+                  {inquiries.filter((i) => i.status === "new").length} NEW
+                </span>
+              </button>
             </div>
           </div>
 
@@ -1140,6 +1472,49 @@ export default function AdminPage() {
                       </button>
                     )}
                   </div>
+                </div>
+              </div>
+
+              {/* DYNAMIC RESUME PDF VAULT */}
+              <div className="p-4 rounded-xl bg-black/60 border border-[#00f0ff]/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1 font-mono text-xs">
+                  <div className="flex items-center gap-2 text-[#00f0ff] font-bold">
+                    <FileText className="w-4 h-4 text-[#ff2a85]" />
+                    <span>DYNAMIC RESUME PDF VAULT</span>
+                  </div>
+                  <div className="text-gray-300">
+                    Active File:{" "}
+                    <span className="text-emerald-400 font-bold">
+                      {p.resumeFileName || "Devesh_Sharma_Resume.pdf"}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-500">
+                    Last Updated: {p.resumeUpdatedAt ? p.resumeUpdatedAt.split("T")[0] : "2026-11-25"} • Recruiters always download the latest uploaded PDF via <code className="text-cyan-300">/api/resume</code>.
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 font-mono text-xs shrink-0">
+                  <a
+                    href="/api/resume"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-[#00f0ff] text-gray-200 font-bold flex items-center gap-1.5 transition-all"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#00f0ff]" />
+                    <span>DOWNLOAD CURRENT</span>
+                  </a>
+
+                  <label className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#00a8ff] text-black font-black cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.4)] hover:brightness-110 transition-all">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isUploadingResume ? "UPLOADING PDF..." : "UPLOAD NEW RESUME (PDF)"}</span>
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      className="hidden"
+                      disabled={isUploadingResume}
+                      onChange={handleResumeUpload}
+                    />
+                  </label>
                 </div>
               </div>
 
@@ -3154,6 +3529,289 @@ export default function AdminPage() {
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* TAB 10: PHOTOHOLIC PINTEREST GALLERY MANAGER */}
+          {activeSection === "photos" && (
+            <div className="bg-[#140124] border border-[#00f0ff]/50 p-6 rounded-2xl space-y-6 shadow-xl animate-fadeIn">
+              <div className="border-b border-gray-800 pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-xl font-black text-white flex items-center gap-2">
+                    <Camera className="w-5 h-5 text-[#ff2a85]" />
+                    <span>PHOTOHOLIC PINTEREST BOARD</span>
+                  </h2>
+                  <p className="text-xs text-gray-400 font-mono mt-0.5">
+                    Upload shots from your device or paste image URLs to showcase your photography in a Pinterest masonry grid.
+                  </p>
+                </div>
+                <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-[#00f0ff]">
+                  {photos.length} PINNED SHOTS
+                </span>
+              </div>
+
+              {/* Upload / Pin New Photo Form */}
+              <form onSubmit={handleAddPhoto} className="bg-black/60 border border-white/10 p-5 rounded-2xl space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-sm font-black text-[#00f0ff] tracking-wider uppercase">
+                    + PIN NEW PHOTOGRAPH
+                  </h3>
+                  <label className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#00a8ff] text-black font-mono text-xs font-black cursor-pointer hover:brightness-110 transition-all flex items-center gap-2">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isUploadingPhoto ? "UPLOADING..." : "UPLOAD PHOTO FILE"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoFileUpload}
+                      disabled={isUploadingPhoto}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                  <div>
+                    <label className="text-gray-400 block mb-1">IMAGE URL (OR AUTO-FILLED ON UPLOAD):</label>
+                    <input
+                      type="text"
+                      value={newPhoto.imageUrl}
+                      onChange={(e) => setNewPhoto((prev) => ({ ...prev, imageUrl: e.target.value }))}
+                      placeholder="https://... or /uploads/..."
+                      className="w-full bg-black/80 border border-gray-800 rounded-xl px-3 py-2 text-cyan-300 outline-none focus:border-[#00f0ff]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-gray-400 block mb-1">SHOT TITLE:</label>
+                    <input
+                      type="text"
+                      value={newPhoto.title}
+                      onChange={(e) => setNewPhoto((prev) => ({ ...prev, title: e.target.value }))}
+                      placeholder="e.g. Golden Hour on Ocean Drive"
+                      className="w-full bg-black/80 border border-gray-800 rounded-xl px-3 py-2 text-white outline-none focus:border-[#ff2a85]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-gray-400 block mb-1">CATEGORY:</label>
+                    <select
+                      value={newPhoto.category}
+                      onChange={(e) =>
+                        setNewPhoto((prev) => ({ ...prev, category: e.target.value as PhotoCategory }))
+                      }
+                      className="w-full bg-black/80 border border-gray-800 rounded-xl px-3 py-2 text-white outline-none focus:border-[#00f0ff]"
+                    >
+                      {["Street", "Sunset", "Portraits", "Travel", "Tech", "Nightlife"].map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-gray-400 block mb-1">MASONRY ASPECT RATIO:</label>
+                    <select
+                      value={newPhoto.aspectRatio}
+                      onChange={(e) =>
+                        setNewPhoto((prev) => ({
+                          ...prev,
+                          aspectRatio: e.target.value as "portrait" | "landscape" | "square",
+                        }))
+                      }
+                      className="w-full bg-black/80 border border-gray-800 rounded-xl px-3 py-2 text-white outline-none focus:border-[#00f0ff]"
+                    >
+                      <option value="portrait">Portrait (Tall 3:4)</option>
+                      <option value="square">Square (1:1)</option>
+                      <option value="landscape">Landscape (Wide 16:10)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-gray-400 block mb-1">LOCATION:</label>
+                    <input
+                      type="text"
+                      value={newPhoto.location}
+                      onChange={(e) => setNewPhoto((prev) => ({ ...prev, location: e.target.value }))}
+                      placeholder="Jaipur / Leonida"
+                      className="w-full bg-black/80 border border-gray-800 rounded-xl px-3 py-2 text-pink-300 outline-none focus:border-[#ff2a85]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-gray-400 block mb-1">CAMERA / LENS GEAR:</label>
+                    <input
+                      type="text"
+                      value={newPhoto.camera}
+                      onChange={(e) => setNewPhoto((prev) => ({ ...prev, camera: e.target.value }))}
+                      placeholder="50mm f/1.8 • ISO 400"
+                      className="w-full bg-black/80 border border-gray-800 rounded-xl px-3 py-2 text-amber-300 outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-gray-400 font-mono text-xs block mb-1">STORY / CAPTION:</label>
+                  <textarea
+                    rows={2}
+                    value={newPhoto.caption}
+                    onChange={(e) => setNewPhoto((prev) => ({ ...prev, caption: e.target.value }))}
+                    placeholder="Behind the lens story..."
+                    className="w-full bg-black/80 border border-gray-800 rounded-xl p-3 text-xs text-gray-200 outline-none focus:border-[#ff2a85]"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <label className="flex items-center gap-2 text-xs font-mono text-amber-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newPhoto.featured}
+                      onChange={(e) => setNewPhoto((prev) => ({ ...prev, featured: e.target.checked }))}
+                      className="accent-[#ff2a85]"
+                    />
+                    <span>Mark as Featured Shot</span>
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={isSavingPhoto}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-mono text-xs font-black tracking-wider shadow-[0_0_20px_rgba(255,42,133,0.5)] hover:brightness-110 transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{isSavingPhoto ? "PINNING..." : "PIN PHOTO TO BOARD"}</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Existing Pinned Photos Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {photos.map((ph) => (
+                  <div
+                    key={ph.id}
+                    className="bg-black/70 border border-white/10 rounded-2xl overflow-hidden flex flex-col justify-between group"
+                  >
+                    <div className="relative h-44 bg-black">
+                      <img
+                        src={ph.imageUrl}
+                        alt={ph.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/75 border border-white/15 font-mono text-[10px] text-[#00f0ff]">
+                        {ph.category}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePhoto(ph.id, ph.title)}
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-950/80 border border-red-500/50 text-red-300 hover:bg-red-800 hover:text-white transition-colors"
+                        title="Delete Pin"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="p-3 space-y-1 font-mono">
+                      <div className="text-sm font-bold text-white truncate">{ph.title}</div>
+                      <div className="text-[10px] text-gray-400 truncate">
+                        {ph.location} • ♥ {ph.likes || 0}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 11: RECRUITER INQUIRIES INBOX */}
+          {activeSection === "inquiries" && (
+            <div className="bg-[#140124] border border-emerald-500/50 p-6 rounded-2xl space-y-6 shadow-xl animate-fadeIn">
+              <div className="border-b border-gray-800 pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-xl font-black text-white flex items-center gap-2">
+                    <Users className="w-5 h-5 text-emerald-400" />
+                    <span>RECRUITER MISSION INQUIRIES</span>
+                  </h2>
+                  <p className="text-xs text-gray-400 font-mono mt-0.5">
+                    Contracts and interview invites submitted via the &quot;Recruit Operative&quot; modal.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchInquiries}
+                  className="px-3 py-1.5 rounded-xl bg-black/60 border border-gray-700 hover:border-emerald-400 text-xs font-mono text-gray-200 flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>REFRESH</span>
+                </button>
+              </div>
+
+              {inquiries.length === 0 ? (
+                <div className="text-center py-12 bg-black/50 rounded-2xl border border-white/10 font-mono text-xs text-gray-400">
+                  NO MISSION CONTRACTS RECEIVED YET.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {inquiries.map((inq) => (
+                    <div
+                      key={inq.id}
+                      className={`p-5 rounded-2xl border font-mono text-xs space-y-3 ${
+                        inq.status === "new"
+                          ? "bg-emerald-950/20 border-emerald-500/60"
+                          : "bg-black/60 border-gray-800 opacity-80"
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-white">{inq.name}</span>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                inq.status === "new"
+                                  ? "bg-emerald-500 text-black"
+                                  : "bg-gray-800 text-gray-300"
+                              }`}
+                            >
+                              {inq.status.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="text-[#00f0ff] mt-0.5">
+                            {inq.company} • {inq.role}
+                          </div>
+                          <div className="text-gray-400 text-[11px]">{inq.email}</div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`mailto:${inq.email}?subject=Re: ${encodeURIComponent(inq.role)}`}
+                            className="px-3 py-1.5 rounded-lg bg-[#00f0ff]/15 border border-[#00f0ff]/40 text-[#00f0ff] hover:bg-[#00f0ff] hover:text-black font-bold transition-colors"
+                          >
+                            REPLY
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleInquiryStatus(inq)}
+                            className="px-3 py-1.5 rounded-lg bg-black/60 border border-gray-700 hover:border-emerald-400 text-gray-300 hover:text-white"
+                          >
+                            {inq.status === "new" ? "MARK REVIEWED" : "MARK NEW"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteInquiry(inq.id)}
+                            className="p-1.5 rounded-lg bg-red-950/60 border border-red-500/40 text-red-300 hover:bg-red-800 hover:text-white"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-200 font-sans text-sm bg-black/50 p-3 rounded-xl border border-white/5">
+                        {inq.message}
+                      </p>
+                      <div className="text-[10px] text-gray-500">
+                        RECEIVED: {new Date(inq.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

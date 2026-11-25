@@ -1,10 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { sfx } from "../lib/soundFx";
-import { Volume2, VolumeX, Briefcase, ShieldAlert, Gamepad2, Newspaper, Radio } from "lucide-react";
+import { NavbarMiniGame } from "./NavbarMiniGame";
+import {
+  Volume2,
+  VolumeX,
+  Briefcase,
+  ShieldAlert,
+  Gamepad2,
+  Newspaper,
+  Radio,
+  Menu,
+  X,
+} from "lucide-react";
 import { PalmTreeIcon } from "./Icons";
 
 interface HUDProps {
@@ -16,13 +27,13 @@ interface HUDProps {
   onLogoClick?: () => void;
 }
 
-export const HUD: React.FC<HUDProps> = ({ 
-  executiveMode, 
-  onToggleExecutiveMode, 
+export const HUD: React.FC<HUDProps> = ({
+  executiveMode,
+  onToggleExecutiveMode,
   onOpenArcade,
   onToggleRadio,
   isRadioOpen,
-  onLogoClick
+  onLogoClick,
 }) => {
   const { data } = usePortfolio();
   const profile = data.profile;
@@ -30,12 +41,17 @@ export const HUD: React.FC<HUDProps> = ({
   const [cash, setCash] = useState(1540890);
   const [isMuted, setIsMuted] = useState(false);
   const [wantedStars, setWantedStars] = useState(profile.wantedLevel || 5);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCash((prev) => prev + Math.floor(Math.random() * 5));
     }, 4000);
     return () => clearInterval(interval);
+  }, []);
+
+  const handleEarnCash = useCallback((amount: number) => {
+    setCash((prev) => prev + amount);
   }, []);
 
   const handleMuteToggle = () => {
@@ -51,43 +67,47 @@ export const HUD: React.FC<HUDProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#110122]/90 backdrop-blur-md border-b border-[#ff2a85]/30 px-4 py-2.5 shadow-[0_4px_30px_rgba(255,42,133,0.2)]">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-        
-        {/* Operative Callout & Wanted Rating */}
-        <div className="flex items-center gap-4">
-          <div 
-            className="flex items-center gap-2 cursor-pointer group select-none hover:opacity-90 active:scale-95 transition-all" 
+    <header className="sticky top-0 z-50 glass-vice border-b border-[#ff2a85]/40 px-3 sm:px-5 py-2 shadow-[0_6px_32px_rgba(255,42,133,0.2)]">
+      <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-3">
+        {/* LEFT: Brand + Wanted Stars */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className="flex items-center gap-2.5 cursor-pointer group select-none active:scale-95 transition-transform"
             onClick={() => {
               sfx.playBleep();
               if (onLogoClick) onLogoClick();
             }}
-            title="Reset to Operative Dossier"
+            title="Reset to Top"
           >
-            <span className="text-3xl font-black italic tracking-tighter text-[#00f0ff] drop-shadow-[0_0_12px_#00f0ff] group-hover:scale-110 transition-transform">
-              VI
-            </span>
-            <div className="leading-none">
-              <h1 className="text-lg sm:text-xl font-black tracking-widest text-white uppercase drop-shadow-[0_0_8px_#ff2a85] group-hover:text-[#00f0ff] transition-colors">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#ff2a85] via-[#7b00ff] to-[#00f0ff] p-[1.5px] shadow-[0_0_15px_rgba(0,240,255,0.45)] group-hover:scale-105 transition-transform">
+              <div className="w-full h-full rounded-[10px] bg-[#0c0119] flex items-center justify-center">
+                <span className="text-lg font-black italic tracking-tighter text-[#00f0ff]">
+                  VI
+                </span>
+              </div>
+            </div>
+
+            <div className="leading-tight truncate">
+              <h1 className="text-sm sm:text-base font-black tracking-widest text-white uppercase group-hover:text-[#00f0ff] transition-colors truncate">
                 {profile.name}
               </h1>
-              <span className="text-[10px] tracking-widest text-[#ff2a85] font-mono font-bold">
-                LEONIDA DIGITAL ZONE // {profile.title.toUpperCase()}
-              </span>
+              <div className="flex items-center gap-1.5 text-[9px] tracking-widest text-[#ff2a85] font-mono font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="truncate">{profile.title.toUpperCase()}</span>
+              </div>
             </div>
           </div>
 
-          {/* Wanted Stars */}
-          <div className="flex items-center gap-1 bg-black/60 px-2.5 py-1 rounded border border-[#ffb700]/40 shadow-[0_0_10px_rgba(255,183,0,0.2)]">
-            <ShieldAlert className="w-3.5 h-3.5 text-[#ffb700]" />
-            <span className="text-[10px] font-mono text-[#ffb700] font-bold mr-1">WANTED:</span>
+          {/* Wanted Stars Badge */}
+          <div className="hidden xl:flex items-center gap-1 bg-black/65 px-2.5 py-1 rounded-lg border border-[#ffb700]/40">
+            <ShieldAlert className="w-3 h-3 text-[#ffb700]" />
             {[...Array(5)].map((_, i) => (
               <span
                 key={i}
                 onClick={() => handleStarClick(i)}
-                className={`text-sm cursor-pointer transition-all ${
-                  i < wantedStars 
-                    ? "text-[#ffb700] drop-shadow-[0_0_6px_#ffb700] scale-105" 
+                className={`text-xs cursor-pointer transition-all ${
+                  i < wantedStars
+                    ? "text-[#ffb700] drop-shadow-[0_0_6px_#ffb700]"
                     : "text-gray-700 opacity-40"
                 }`}
               >
@@ -97,126 +117,161 @@ export const HUD: React.FC<HUDProps> = ({
           </div>
         </div>
 
-        {/* Live Vitals, Bank Balance & Toggles */}
-        <div className="flex items-center gap-4 font-mono text-xs">
-          
-          {/* Health & Armor Status */}
-          <div className="hidden lg:flex flex-col gap-1 w-36">
-            <div className="flex items-center justify-between text-[9px] text-emerald-400 font-bold">
-              <span>{profile.vitals.healthLabel || "HEALTH (UI/UX)"}</span>
-              <span>{profile.vitals.healthVal}%</span>
-            </div>
-            <div className="w-full bg-gray-900 h-1.5 rounded-full overflow-hidden border border-emerald-500/30">
-              <div 
-                className="bg-emerald-500 h-full shadow-[0_0_8px_#10b981]" 
-                style={{ width: `${profile.vitals.healthVal}%` }} 
-              />
-            </div>
-            <div className="flex items-center justify-between text-[9px] text-cyan-400 font-bold">
-              <span>{profile.vitals.armorLabel || "ARMOR (BACKEND)"}</span>
-              <span>{profile.vitals.armorVal}%</span>
-            </div>
-            <div className="w-full bg-gray-900 h-1.5 rounded-full overflow-hidden border border-cyan-500/30">
-              <div 
-                className="bg-cyan-500 h-full shadow-[0_0_8px_#06b6d4]" 
-                style={{ width: `${profile.vitals.armorVal}%` }} 
-              />
-            </div>
-          </div>
+        {/* CENTER: Playable Mini GTA Game Inside the Navbar */}
+        {!executiveMode && <NavbarMiniGame onEarnCash={handleEarnCash} />}
 
-          {/* Cash Balance Display */}
-          <div className="bg-black/70 px-3 py-1.5 rounded border border-[#00f0ff]/40 text-right shadow-[0_0_12px_rgba(0,240,255,0.2)]">
-            <div className="text-[9px] text-[#00f0ff] font-bold tracking-wider">OPERATIVE VALUE</div>
-            <div className="text-sm font-black text-emerald-400 tracking-wider">
+        {/* RIGHT: Cash, Audio, Radio, Arcade, Dispatches, Executive Mode */}
+        <div className="flex items-center gap-2 font-mono text-xs">
+          {/* Live Cash Counter */}
+          <div className="hidden sm:block bg-black/70 px-2.5 py-1 rounded-lg border border-emerald-500/35 text-right">
+            <div className="text-[8px] text-[#00f0ff] font-bold tracking-wider">VALUE</div>
+            <div className="text-xs font-black text-emerald-400 tracking-wider">
               ${cash.toLocaleString()}
             </div>
           </div>
 
-          {/* Sound Mute Toggle */}
-          <button
-            onClick={handleMuteToggle}
-            className="p-1.5 rounded bg-black/60 border border-gray-700 hover:border-[#ff2a85] text-gray-300 hover:text-white transition-colors"
-            title={isMuted ? "Unmute Audio" : "Mute Audio"}
-          >
-            {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-[#00f0ff]" />}
-          </button>
-
-          {/* Vice City Radio / Spotify Player Toggle */}
-          {onToggleRadio && !executiveMode && (
+          {/* Desktop Action Pills */}
+          <div className="hidden lg:flex items-center gap-1.5">
             <button
-              onClick={() => {
-                sfx.playClick();
-                onToggleRadio();
-              }}
-              className={`px-2.5 py-1.5 rounded-lg border font-mono text-xs font-bold transition-all flex items-center gap-1.5 ${
-                isRadioOpen
-                  ? "bg-amber-950/80 border-amber-400 text-amber-300 shadow-[0_0_15px_#f59e0b]"
-                  : "bg-black/70 border-gray-700 hover:border-[#ff2a85] text-gray-300 hover:text-white"
-              }`}
-              title="Toggle GTA Vice City Radio & Spotify Player"
+              onClick={handleMuteToggle}
+              className="p-2 rounded-lg bg-black/65 border border-white/15 hover:border-[#ff2a85] text-gray-300 hover:text-white transition-colors"
+              title={isMuted ? "Unmute Audio" : "Mute Audio"}
             >
-              <Radio className={`w-3.5 h-3.5 ${isRadioOpen ? "text-amber-400 animate-pulse" : "text-[#ff2a85]"}`} />
-              <span className="hidden sm:inline">RADIO</span>
-              {isRadioOpen && (
-                <span className="flex items-center gap-0.5 h-2.5 ml-0.5">
-                  <span className="w-0.5 h-full bg-amber-400 animate-pulse" />
-                  <span className="w-0.5 h-2/3 bg-amber-400 animate-pulse" style={{ animationDelay: "0.2s" }} />
-                  <span className="w-0.5 h-full bg-amber-400 animate-pulse" style={{ animationDelay: "0.4s" }} />
-                </span>
+              {isMuted ? (
+                <VolumeX className="w-3.5 h-3.5 text-red-400" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5 text-[#00f0ff]" />
               )}
             </button>
-          )}
 
-          {/* Arcade Mini-Game Launcher */}
-          {onOpenArcade && !executiveMode && (
-            <button
-              onClick={() => {
-                sfx.playArcadeBoost();
-                onOpenArcade();
-              }}
-              className="px-2.5 py-1.5 rounded-lg bg-black/70 border border-[#00f0ff]/50 hover:border-[#ff2a85] text-[#00f0ff] hover:text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,240,255,0.25)] hover:shadow-[0_0_15px_#ff2a85]"
-              title="Play Leonida Drift Arcade Game"
+            {onToggleRadio && !executiveMode && (
+              <button
+                onClick={() => {
+                  sfx.playClick();
+                  onToggleRadio();
+                }}
+                className={`px-2.5 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                  isRadioOpen
+                    ? "bg-amber-950/80 border-amber-400 text-amber-300 shadow-[0_0_12px_#f59e0b]"
+                    : "bg-black/65 border-white/15 hover:border-[#ff2a85] text-gray-300 hover:text-white"
+                }`}
+                title="Vice City Radio"
+              >
+                <Radio
+                  className={`w-3.5 h-3.5 ${
+                    isRadioOpen ? "text-amber-400 animate-pulse" : "text-[#ff2a85]"
+                  }`}
+                />
+                <span>RADIO</span>
+              </button>
+            )}
+
+            {onOpenArcade && !executiveMode && (
+              <button
+                onClick={() => {
+                  sfx.playArcadeBoost();
+                  onOpenArcade();
+                }}
+                className="px-2.5 py-1.5 rounded-lg bg-black/65 border border-[#00f0ff]/45 hover:border-[#ff2a85] text-[#00f0ff] hover:text-white font-bold transition-all flex items-center gap-1.5"
+                title="Full Arcade Mode"
+              >
+                <Gamepad2 className="w-3.5 h-3.5" />
+                <span>ARCADE</span>
+              </button>
+            )}
+
+            <Link
+              href="/blog"
+              onClick={() => sfx.playClick()}
+              className="px-2.5 py-1.5 rounded-lg bg-black/65 border border-[#ff2a85]/45 hover:border-[#00f0ff] text-pink-300 hover:text-white font-bold transition-all flex items-center gap-1.5"
+              title="Weazel News & Dispatches"
             >
-              <Gamepad2 className="w-3.5 h-3.5 text-[#00f0ff]" />
-              <span className="hidden sm:inline">ARCADE</span>
-            </button>
-          )}
+              <Newspaper className="w-3.5 h-3.5 text-[#ff2a85]" />
+              <span>BLOG</span>
+            </Link>
+          </div>
 
-          {/* Weazel News Blog Link */}
-          <Link
-            href="/blog"
-            onClick={() => sfx.playClick()}
-            className="px-2.5 py-1.5 rounded-lg bg-black/70 border border-[#ff2a85]/50 hover:border-[#00f0ff] text-pink-300 hover:text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(255,42,133,0.2)] hover:shadow-[0_0_15px_#00f0ff]"
-            title="Read Weazel News & Tech Dispatches"
-          >
-            <Newspaper className="w-3.5 h-3.5 text-[#ff2a85]" />
-            <span className="hidden sm:inline">DISPATCHES</span>
-          </Link>
-
-          {/* Recruiter Executive Mode Toggle */}
+          {/* Recruiter Mode CTA */}
           <button
             onClick={() => {
               sfx.playBleep();
               onToggleExecutiveMode();
             }}
-            className="px-3 py-1.5 rounded bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-bold text-xs shadow-[0_0_15px_rgba(255,42,133,0.5)] hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-bold text-xs shadow-[0_0_16px_rgba(255,42,133,0.45)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
           >
             {executiveMode ? (
               <>
                 <PalmTreeIcon className="w-3.5 h-3.5 text-yellow-300" />
-                <span>Vice City Mode</span>
+                <span className="hidden sm:inline">Vice City</span>
               </>
             ) : (
               <>
                 <Briefcase className="w-3.5 h-3.5" />
-                <span>Recruiter View</span>
+                <span className="hidden sm:inline">Recruiter</span>
               </>
             )}
           </button>
 
+          {/* Mobile Drawer Toggle */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="lg:hidden p-2 rounded-lg bg-black/65 border border-white/15 text-gray-200 hover:border-[#00f0ff]"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
         </div>
-
       </div>
+
+      {/* Mobile Dropdown Drawer */}
+      {mobileOpen && (
+        <div className="lg:hidden mt-2 pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+          <button
+            onClick={handleMuteToggle}
+            className="px-3 py-1.5 rounded-lg bg-black/65 border border-white/15 text-gray-200 flex items-center gap-1.5"
+          >
+            {isMuted ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5 text-[#00f0ff]" />}
+            <span>{isMuted ? "Unmute" : "Sound On"}</span>
+          </button>
+
+          {onToggleRadio && !executiveMode && (
+            <button
+              onClick={() => {
+                sfx.playClick();
+                onToggleRadio();
+                setMobileOpen(false);
+              }}
+              className="px-3 py-1.5 rounded-lg bg-black/65 border border-white/15 text-amber-300 flex items-center gap-1.5"
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>Radio</span>
+            </button>
+          )}
+
+          {onOpenArcade && !executiveMode && (
+            <button
+              onClick={() => {
+                sfx.playArcadeBoost();
+                onOpenArcade();
+                setMobileOpen(false);
+              }}
+              className="px-3 py-1.5 rounded-lg bg-black/65 border border-[#00f0ff]/45 text-[#00f0ff] flex items-center gap-1.5"
+            >
+              <Gamepad2 className="w-3.5 h-3.5" />
+              <span>Arcade</span>
+            </button>
+          )}
+
+          <Link
+            href="/blog"
+            onClick={() => sfx.playClick()}
+            className="px-3 py-1.5 rounded-lg bg-black/65 border border-[#ff2a85]/45 text-pink-300 flex items-center gap-1.5"
+          >
+            <Newspaper className="w-3.5 h-3.5" />
+            <span>Blog</span>
+          </Link>
+        </div>
+      )}
     </header>
   );
 };

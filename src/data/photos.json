@@ -1,0 +1,80 @@
+[
+  {
+    "id": "photo-1",
+    "title": "Neon Vice Boulevard",
+    "caption": "Late-night neon reflections after shipping a 2AM production deploy.",
+    "imageUrl": "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=1000&q=80",
+    "category": "Nightlife",
+    "location": "Jaipur // Leonida Grid",
+    "camera": "50mm f/1.8 • ISO 800",
+    "aspectRatio": "portrait",
+    "likes": 42,
+    "featured": true,
+    "createdAt": "2026-11-20"
+  },
+  {
+    "id": "photo-2",
+    "title": "Golden Hour Horizons",
+    "caption": "Chasing warm twilight palettes between system architecture sprints.",
+    "imageUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80",
+    "category": "Sunset",
+    "location": "Ocean Drive",
+    "camera": "24mm f/2.8 • 1/500s",
+    "aspectRatio": "landscape",
+    "likes": 31,
+    "featured": true,
+    "createdAt": "2026-11-18"
+  },
+  {
+    "id": "photo-3",
+    "title": "Midnight Battlestation",
+    "caption": "Dual-monitor TypeScript & Three.js shader debugging setup.",
+    "imageUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80",
+    "category": "Tech",
+    "location": "HQ Studio",
+    "camera": "35mm f/1.4 • Studio Glow",
+    "aspectRatio": "square",
+    "likes": 58,
+    "featured": true,
+    "createdAt": "2026-11-15"
+  },
+  {
+    "id": "photo-4",
+    "title": "Rain-Slicked Cyber Alley",
+    "caption": "Street photography inspired by retro synthwave color grading.",
+    "imageUrl": "https://images.unsplash.com/photo-1555680202-c86f0e12f086?auto=format&fit=crop&w=1000&q=80",
+    "category": "Street",
+    "location": "Downtown Sector",
+    "camera": "35mm f/2.0 • 1/125s",
+    "aspectRatio": "portrait",
+    "likes": 27,
+    "featured": false,
+    "createdAt": "2026-11-12"
+  },
+  {
+    "id": "photo-5",
+    "title": "Turbocharged Night Cruise",
+    "caption": "Low-light panning shot on the highway.",
+    "imageUrl": "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1000&q=80",
+    "category": "Travel",
+    "location": "Expressway 06",
+    "camera": "85mm f/1.8 • 1/60s",
+    "aspectRatio": "landscape",
+    "likes": 36,
+    "featured": false,
+    "createdAt": "2026-11-10"
+  },
+  {
+    "id": "photo-6",
+    "title": "Arcade Pulse",
+    "caption": "Vintage neon cabinets and pure retro energy.",
+    "imageUrl": "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80",
+    "category": "Portraits",
+    "location": "Vice Arcade",
+    "camera": "50mm f/1.4 • ISO 1600",
+    "aspectRatio": "portrait",
+    "likes": 49,
+    "featured": true,
+    "createdAt": "2026-11-05"
+  }
+]
