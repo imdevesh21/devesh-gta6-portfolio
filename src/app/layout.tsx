@@ -4,7 +4,11 @@ import { PortfolioProvider } from "@/context/PortfolioContext";
 import { VisitorTracker } from "@/components/VisitorTracker";
 
 export const metadata: Metadata = {
-  title: "Devesh Sharma // Full-Stack Architect [GTA-6 Portfolio]",
+  metadataBase: new URL("https://devesh-gta6-portfolio.vercel.app"),
+  title: {
+    default: "VI // Devesh Sharma — Full-Stack Developer",
+    template: "%s | VI // Devesh Sharma",
+  },
   description:
     "Interactive GTA-VI (Vice City / State of Leonida) themed portfolio of Devesh Sharma. Full Stack Developer specializing in Next.js, Node.js, TypeScript, and high-velocity API performance.",
   keywords: [
@@ -20,11 +24,11 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Devesh Sharma" }],
   openGraph: {
-    title: "Devesh Sharma // Full-Stack Architect [GTA-6 Portfolio]",
+    title: "VI // Devesh Sharma — Full-Stack Developer",
     description:
       "Interactive 3D Grand Theft Auto VI developer portfolio built with Next.js 14, Three.js & GSAP.",
-    url: "https://deveshportfolio.vercel.app",
-    siteName: "Devesh Sharma Portfolio",
+    url: "https://devesh-gta6-portfolio.vercel.app",
+    siteName: "VI // Devesh Sharma",
     type: "website",
   },
 };
