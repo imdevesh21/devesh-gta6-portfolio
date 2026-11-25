@@ -7,7 +7,9 @@ export const dynamic = "force-dynamic";
 async function sendRecruiterAlert(inquiry: RecruiterInquiry, recipientEmail: string) {
   const resendKey = process.env.RESEND_API_KEY;
   const webhookUrl = process.env.ALERT_WEBHOOK_URL;
-  const toEmail = process.env.ALERT_EMAIL || recipientEmail || "Deveshsharma.it23@gmail.com";
+  const toEmail = (process.env.ALERT_EMAIL || recipientEmail || "deveshsharma.it23@gmail.com")
+    .trim()
+    .toLowerCase();
 
   let alertSent = false;
   let alertChannel = "none";
