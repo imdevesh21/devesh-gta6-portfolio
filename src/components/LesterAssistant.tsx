@@ -30,10 +30,19 @@ export const LesterAssistant: React.FC = () => {
   ]);
 
   const endRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+    };
+  }, []);
 
   const speakText = (text: string) => {
     if (!voiceEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
@@ -60,6 +69,9 @@ export const LesterAssistant: React.FC = () => {
     }
 
     if (isListening) {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
       setIsListening(false);
       return;
     }
@@ -68,26 +80,44 @@ export const LesterAssistant: React.FC = () => {
       const rec = new SpeechRec() as {
         lang: string;
         interimResults: boolean;
-        onresult: (e: { results: { 0: { 0: { transcript: string } } } }) => void;
+        onresult: (e: {
+          results: ArrayLike<{ isFinal?: boolean; 0: { transcript: string } }>;
+        }) => void;
         onerror: () => void;
         onend: () => void;
         start: () => void;
+        stop: () => void;
       };
+      recognitionRef.current = rec;
       rec.lang = "en-US";
-      rec.interimResults = false;
+      rec.interimResults = true;
       setIsListening(true);
       sfx.playClick();
       rec.onresult = (event) => {
-        const transcript = event.results?.[0]?.[0]?.transcript;
-        if (transcript) {
+        const lastIdx = event.results.length - 1;
+        const result = event.results?.[lastIdx];
+        const transcript = result?.[0]?.transcript || "";
+        if (!transcript) return;
+
+        if (result.isFinal) {
+          setInput("");
           askQuestion(transcript);
+        } else {
+          setInput(transcript);
         }
       };
-      rec.onerror = () => setIsListening(false);
-      rec.onend = () => setIsListening(false);
+      rec.onerror = () => {
+        setIsListening(false);
+        recognitionRef.current = null;
+      };
+      rec.onend = () => {
+        setIsListening(false);
+        recognitionRef.current = null;
+      };
       rec.start();
     } catch {
       setIsListening(false);
+      recognitionRef.current = null;
     }
   };
 
@@ -155,7 +185,14 @@ export const LesterAssistant: React.FC = () => {
               <Bot className="w-4 h-4 text-[#00f0ff]" />
               <div>
                 <div className="text-xs font-black text-white">LESTER // AI OPERATIVE</div>
-                <div className="text-[9px] text-emerald-400">ONLINE • LIVE RESUME INTEL</div>
+                {isListening ? (
+                  <div className="text-[9px] text-[#ff2a85] font-bold flex items-center gap-1 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    <span>LISTENING // VOICE UPLINK</span>
+                  </div>
+                ) : (
+                  <div className="text-[9px] text-emerald-400">ONLINE • LIVE RESUME INTEL</div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-1.5">
@@ -223,6 +260,35 @@ export const LesterAssistant: React.FC = () => {
             ))}
           </div>
 
+          {/* Live Voice Listening Indicator Banner */}
+          {isListening && (
+            <div className="px-3.5 py-2 bg-gradient-to-r from-[#ff2a85]/20 via-red-950/60 to-[#00f0ff]/15 border-t border-[#ff2a85]/50 flex items-center justify-between gap-2 font-mono">
+              <div className="flex items-center gap-2.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                </span>
+                <span className="text-[11px] font-bold text-white tracking-wide">
+                  LESTER IS LISTENING...
+                </span>
+                {/* Animated Equalizer Bars */}
+                <div className="flex items-end gap-0.5 h-3.5" aria-hidden="true">
+                  <span className="w-0.5 bg-[#00f0ff] rounded-full animate-bounce h-2" style={{ animationDelay: "0ms" }} />
+                  <span className="w-0.5 bg-[#ff2a85] rounded-full animate-bounce h-3.5" style={{ animationDelay: "120ms" }} />
+                  <span className="w-0.5 bg-[#00f0ff] rounded-full animate-bounce h-2.5" style={{ animationDelay: "240ms" }} />
+                  <span className="w-0.5 bg-[#ff2a85] rounded-full animate-bounce h-3" style={{ animationDelay: "360ms" }} />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={toggleVoiceInput}
+                className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 border border-red-400/50 text-red-200 hover:bg-red-500 hover:text-white transition-colors"
+              >
+                STOP
+              </button>
+            </div>
+          )}
+
           {/* Input */}
           <form
             onSubmit={(e) => {
@@ -235,20 +301,25 @@ export const LesterAssistant: React.FC = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about skills, projects..."
-              className="flex-1 bg-black/70 border border-gray-700 focus:border-[#00f0ff] rounded-xl px-3 py-2 text-xs text-white font-mono outline-none"
+              placeholder={isListening ? "Listening... speak now" : "Ask about skills, projects..."}
+              className={`flex-1 bg-black/70 border rounded-xl px-3 py-2 text-xs text-white font-mono outline-none transition-colors ${
+                isListening ? "border-[#ff2a85] placeholder:text-[#ff85b8]" : "border-gray-700 focus:border-[#00f0ff]"
+              }`}
             />
             <button
               type="button"
               onClick={toggleVoiceInput}
-              className={`p-2 rounded-xl border transition-all ${
+              className={`relative p-2 rounded-xl border transition-all ${
                 isListening
-                  ? "bg-red-500 border-red-400 text-white animate-pulse"
+                  ? "bg-red-500 border-red-400 text-white shadow-[0_0_16px_rgba(239,68,68,0.75)]"
                   : "bg-black/70 border-gray-700 hover:border-[#ff2a85] text-gray-300 hover:text-white"
               }`}
-              title="Speak your question"
+              title={isListening ? "Stop listening" : "Speak your question"}
             >
-              {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+              {isListening && (
+                <span className="absolute -inset-1 rounded-xl border border-red-400 animate-ping opacity-60 pointer-events-none" />
+              )}
+              {isListening ? <MicOff className="w-3.5 h-3.5 relative z-10" /> : <Mic className="w-3.5 h-3.5" />}
             </button>
             <button
               type="submit"
