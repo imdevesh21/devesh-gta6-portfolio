@@ -69,29 +69,29 @@ export const DossierTab: React.FC<DossierTabProps> = ({ onOpenHireModal }) => {
                 </p>
 
                 <div className="mt-5 pt-4 border-t border-white/10 text-left space-y-2.5 font-mono text-xs text-gray-300">
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-1.5 text-gray-400">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="flex items-center gap-1.5 text-gray-400 shrink-0">
                       <MapPin className="w-3.5 h-3.5 text-[#ff2a85]" /> BASE:
                     </span>
-                    <span className="text-white font-bold">{profile.location}</span>
+                    <span className="text-white font-bold text-right">{profile.location}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-1.5 text-gray-400">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="flex items-center gap-1.5 text-gray-400 shrink-0">
                       <GraduationCap className="w-3.5 h-3.5 text-[#00f0ff]" /> DEGREE:
                     </span>
-                    <span className="text-white font-bold">{profile.education.degree}</span>
+                    <span className="text-white font-bold text-right">{profile.education.degree}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-1.5 text-gray-400">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="flex items-center gap-1.5 text-gray-400 shrink-0">
                       <Trophy className="w-3.5 h-3.5 text-[#ffb700]" /> CGPA:
                     </span>
-                    <span className="text-[#ffb700] font-bold">{profile.education.cgpa}</span>
+                    <span className="text-[#ffb700] font-bold text-right">{profile.education.cgpa}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-1.5 text-gray-400">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="flex items-center gap-1.5 text-gray-400 shrink-0">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> STATUS:
                     </span>
-                    <span className="text-emerald-400 font-bold">Active in Production</span>
+                    <span className="text-emerald-400 font-bold text-right">Active in Production</span>
                   </div>
                 </div>
               </div>
