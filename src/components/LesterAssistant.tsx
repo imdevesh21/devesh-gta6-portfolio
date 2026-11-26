@@ -9,7 +9,7 @@ interface ChatMessage {
   text: string;
 }
 
-const QUICK_PROMPTS = [
+const DEFAULT_QUICK_PROMPTS = [
   "Why hire Devesh?",
   "Next.js & SQL experience?",
   "Top deployed projects?",
@@ -23,12 +23,31 @@ export const LesterAssistant: React.FC = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string>("");
+  const [assistantName, setAssistantName] = useState("LESTER // AI OPERATIVE");
+  const [quickPrompts, setQuickPrompts] = useState<string[]>(DEFAULT_QUICK_PROMPTS);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "bot",
       text: "Yo! I'm Lester — Devesh's AI Operative. Ask me anything about his Next.js/SQL stack, Vyn Automation impact, projects, or resume!",
     },
   ]);
+
+  useEffect(() => {
+    fetch("/api/llm-config")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.config) {
+          if (json.config.assistantName) setAssistantName(json.config.assistantName);
+          if (Array.isArray(json.config.quickPrompts) && json.config.quickPrompts.length > 0) {
+            setQuickPrompts(json.config.quickPrompts);
+          }
+          if (json.config.greetingMessage) {
+            setMessages([{ role: "bot", text: json.config.greetingMessage }]);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const endRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
@@ -237,7 +256,7 @@ export const LesterAssistant: React.FC = () => {
             <div className="flex items-center gap-2 font-mono">
               <Bot className="w-4 h-4 text-[#00f0ff]" />
               <div>
-                <div className="text-xs font-black text-white">LESTER // AI OPERATIVE</div>
+                <div className="text-xs font-black text-white">{assistantName}</div>
                 {isListening ? (
                   <div className="text-[9px] text-[#ff2a85] font-bold flex items-center gap-1 animate-pulse">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
@@ -300,7 +319,7 @@ export const LesterAssistant: React.FC = () => {
 
           {/* Quick Prompt Chips */}
           <div className="px-3 py-1.5 flex flex-wrap gap-1.5 border-t border-white/10 bg-black/40">
-            {QUICK_PROMPTS.map((qp) => (
+            {quickPrompts.map((qp) => (
               <button
                 key={qp}
                 type="button"

@@ -57,13 +57,12 @@ export const HeistCampaignTab: React.FC = () => {
                     />
                     <div className="absolute top-3 left-3 z-30">
                       <span
-                        className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border backdrop-blur-md flex items-center gap-1 ${
-                          isInProgress
-                            ? "bg-emerald-950/80 border-emerald-500 text-emerald-300"
-                            : isTraining
+                        className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border backdrop-blur-md flex items-center gap-1 ${isInProgress
+                          ? "bg-emerald-950/80 border-emerald-500 text-emerald-300"
+                          : isTraining
                             ? "bg-black/75 border-gray-500 text-gray-300"
                             : "bg-cyan-950/80 border-cyan-400 text-cyan-200"
-                        }`}
+                          }`}
                       >
                         {isInProgress ? (
                           <>

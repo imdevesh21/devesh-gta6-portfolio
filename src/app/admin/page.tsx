@@ -6,6 +6,7 @@ import { PortfolioData, SkillWeapon, ExperienceItem, ProjectItem, CertificationI
 import { BlogPost } from "@/types/blog";
 import { PhotoItem, PhotoCategory } from "@/types/photo";
 import { RecruiterInquiry } from "@/types/inquiry";
+import { LLMConfig } from "@/types/llm";
 import { DEFAULT_STATIONS, getSpotifyEmbedUrl } from "@/components/GTARadioPlayer";
 import { sfx } from "@/lib/soundFx";
 import Link from "next/link";
@@ -50,7 +51,10 @@ import {
   Camera,
   KeyRound,
   EyeOff,
-  FileText
+  FileText,
+  Bot,
+  Sliders,
+  Send
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -145,8 +149,86 @@ export default function AdminPage() {
       fetchBlogs();
       fetchPhotos();
       fetchInquiries();
+      fetchLLMConfig();
     }
   }, [isAuthenticated]);
+
+  // LLM Training Lab State
+  const [llmConfig, setLlmConfig] = useState<LLMConfig>({
+    assistantName: "LESTER // AI OPERATIVE",
+    greetingMessage: "",
+    systemPrompt: "",
+    customKnowledge: "",
+    temperature: 0.4,
+    model: "gemini-3-flash-preview",
+    quickPrompts: ["Why hire Devesh?", "Next.js & SQL experience?", "Top deployed projects?", "Download resume"],
+    trainingExamples: [],
+    updatedAt: "",
+  });
+  const [isSavingLLM, setIsSavingLLM] = useState<boolean>(false);
+  const [llmTestQuestion, setLlmTestQuestion] = useState<string>("Why should we hire Devesh?");
+  const [llmTestReply, setLlmTestReply] = useState<string>("");
+  const [llmTestSource, setLlmTestSource] = useState<string>("");
+  const [isTestingLLM, setIsTestingLLM] = useState<boolean>(false);
+
+  const fetchLLMConfig = async () => {
+    try {
+      const res = await fetch("/api/llm-config");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.config) setLlmConfig(json.config);
+      }
+    } catch (err) {
+      console.error("Failed to fetch LLM config:", err);
+    }
+  };
+
+  const handleSaveLLMConfig = async () => {
+    sfx.playClick();
+    setIsSavingLLM(true);
+    try {
+      const res = await fetch("/api/llm-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(llmConfig),
+      });
+      const json = await res.json();
+      if (json.success) {
+        sfx.playMissionPassed();
+        try { confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } }); } catch {}
+        setSaveStatus(`LLM TRAINING DEPLOYED (${json.storage})!`);
+        setTimeout(() => setSaveStatus(""), 4000);
+      } else {
+        alert(json.error || "Failed to save LLM config");
+      }
+    } catch {
+      alert("Network error while saving LLM config");
+    } finally {
+      setIsSavingLLM(false);
+    }
+  };
+
+  const handleTestLLM = async () => {
+    if (!llmTestQuestion.trim()) return;
+    sfx.playClick();
+    setIsTestingLLM(true);
+    setLlmTestReply("");
+    try {
+      const res = await fetch("/api/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: llmTestQuestion, overrideConfig: llmConfig }),
+      });
+      const json = await res.json();
+      setLlmTestReply(json.reply || "No response");
+      setLlmTestSource(json.source || "");
+      sfx.playBleep();
+    } catch {
+      setLlmTestReply("Error testing LLM endpoint.");
+    } finally {
+      setIsTestingLLM(false);
+    }
+  };
 
   // Recruiter Inquiries Inbox State
   const [inquiries, setInquiries] = useState<RecruiterInquiry[]>([]);
@@ -1368,6 +1450,26 @@ export default function AdminPage() {
                 </div>
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-emerald-300 border border-emerald-500/30">
                   {inquiries.filter((i) => i.status === "new").length} NEW
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveSection("llm");
+                  sfx.playClick();
+                }}
+                className={`w-full px-3 py-2.5 rounded-xl font-bold flex items-center justify-between gap-2 transition-all ${
+                  activeSection === "llm"
+                    ? "bg-gradient-to-r from-[#00f0ff] to-[#7b00ff] text-white shadow-[0_0_20px_#00f0ff] scale-[1.02]"
+                    : "bg-cyan-950/30 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900/40 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-[#00f0ff]" />
+                  <span>LLM Training Lab</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/60 font-mono text-[#00f0ff] border border-cyan-500/30">
+                  {llmConfig.trainingExamples?.length || 0} Q&amp;A
                 </span>
               </button>
             </div>
@@ -3812,6 +3914,257 @@ export default function AdminPage() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB 12: LLM TRAINING & FINE-TUNING LAB */}
+          {activeSection === "llm" && (
+            <div className="bg-[#140124] border border-[#00f0ff]/50 p-6 rounded-2xl space-y-6 shadow-xl animate-fadeIn">
+              <div className="border-b border-gray-800 pb-3 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-white flex items-center gap-2">
+                    <Bot className="w-5 h-5 text-[#00f0ff]" />
+                    <span>LESTER AI // LLM TRAINING &amp; FINE-TUNING LAB</span>
+                  </h2>
+                  <p className="text-xs text-gray-400 font-mono mt-0.5">
+                    Fine-tune system prompt, custom recruiter knowledge, model temperature, and few-shot Q&amp;A pairs in real time.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveLLMConfig}
+                  disabled={isSavingLLM}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#7b00ff] text-white font-mono text-xs font-black tracking-wider shadow-[0_0_20px_rgba(0,240,255,0.45)] hover:brightness-110 transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSavingLLM ? "DEPLOYING..." : "SAVE & DEPLOY LLM"}</span>
+                </button>
+              </div>
+
+              {/* Persona, Model & Temperature */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+                <div>
+                  <label className="text-gray-400 block mb-1">ASSISTANT NAME:</label>
+                  <input
+                    type="text"
+                    value={llmConfig.assistantName}
+                    onChange={(e) => setLlmConfig((prev) => ({ ...prev, assistantName: e.target.value }))}
+                    className="w-full bg-black/75 border border-gray-800 rounded-xl px-3 py-2 text-[#00f0ff] outline-none focus:border-[#00f0ff]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-gray-400 block mb-1">GEMINI MODEL:</label>
+                  <select
+                    value={llmConfig.model}
+                    onChange={(e) =>
+                      setLlmConfig((prev) => ({
+                        ...prev,
+                        model: e.target.value as LLMConfig["model"],
+                      }))
+                    }
+                    className="w-full bg-black/75 border border-gray-800 rounded-xl px-3 py-2 text-white outline-none focus:border-[#00f0ff]"
+                  >
+                    <option value="gemini-3-flash-preview">gemini-3-flash-preview (Fast &amp; Live)</option>
+                    <option value="gemini-3.8-flash">gemini-3.8-flash</option>
+                    <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-gray-400 flex items-center justify-between mb-1">
+                    <span className="flex items-center gap-1">
+                      <Sliders className="w-3.5 h-3.5 text-[#ff2a85]" /> TEMPERATURE:
+                    </span>
+                    <span className="text-[#ff2a85] font-bold">{llmConfig.temperature}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    value={llmConfig.temperature}
+                    onChange={(e) =>
+                      setLlmConfig((prev) => ({ ...prev, temperature: parseFloat(e.target.value) }))
+                    }
+                    className="w-full accent-[#ff2a85] mt-2"
+                  />
+                  <div className="flex justify-between text-[9px] text-gray-500">
+                    <span>0.0 Factual</span>
+                    <span>1.0 Creative</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Greeting Message & Quick Prompts */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                <div>
+                  <label className="text-gray-400 block mb-1">WELCOME GREETING MESSAGE:</label>
+                  <textarea
+                    rows={2}
+                    value={llmConfig.greetingMessage}
+                    onChange={(e) => setLlmConfig((prev) => ({ ...prev, greetingMessage: e.target.value }))}
+                    className="w-full bg-black/75 border border-gray-800 rounded-xl p-3 text-gray-200 outline-none focus:border-[#00f0ff]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-gray-400 block mb-1">QUICK PROMPT CHIPS (COMMA-SEPARATED):</label>
+                  <textarea
+                    rows={2}
+                    value={(llmConfig.quickPrompts || []).join(", ")}
+                    onChange={(e) =>
+                      setLlmConfig((prev) => ({
+                        ...prev,
+                        quickPrompts: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                      }))
+                    }
+                    className="w-full bg-black/75 border border-gray-800 rounded-xl p-3 text-cyan-300 outline-none focus:border-[#00f0ff]"
+                  />
+                </div>
+              </div>
+
+              {/* System Prompt & Custom Knowledge */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                <div>
+                  <label className="text-[#00f0ff] font-bold block mb-1">SYSTEM PROMPT / PERSONA INSTRUCTIONS:</label>
+                  <textarea
+                    rows={5}
+                    value={llmConfig.systemPrompt}
+                    onChange={(e) => setLlmConfig((prev) => ({ ...prev, systemPrompt: e.target.value }))}
+                    className="w-full bg-black/75 border border-gray-800 rounded-xl p-3 text-gray-200 outline-none focus:border-[#00f0ff] leading-relaxed"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[#ff2a85] font-bold block mb-1">CUSTOM KNOWLEDGE BASE (CTC, NOTICE PERIOD, EXTRA FACTS):</label>
+                  <textarea
+                    rows={5}
+                    value={llmConfig.customKnowledge}
+                    onChange={(e) => setLlmConfig((prev) => ({ ...prev, customKnowledge: e.target.value }))}
+                    placeholder="Add salary expectations, notice period, preferred locations, extra achievements..."
+                    className="w-full bg-black/75 border border-gray-800 rounded-xl p-3 text-gray-200 outline-none focus:border-[#ff2a85] leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* Few-Shot Q&A Training Pairs */}
+              <div className="space-y-3 bg-black/55 border border-white/10 p-5 rounded-2xl">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-black text-amber-300 font-mono uppercase">
+                      FEW-SHOT Q&amp;A TRAINING EXAMPLES ({llmConfig.trainingExamples?.length || 0})
+                    </h3>
+                    <p className="text-[11px] text-gray-400">
+                      Teach Lester exact ideal answers for common recruiter questions.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sfx.playClick();
+                      setLlmConfig((prev) => ({
+                        ...prev,
+                        trainingExamples: [
+                          ...(prev.trainingExamples || []),
+                          { id: `qa-${Date.now()}`, question: "", idealAnswer: "" },
+                        ],
+                      }));
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-[#ff2a85] hover:bg-pink-600 text-white font-mono text-xs font-bold flex items-center gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>ADD Q&amp;A PAIR</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {(llmConfig.trainingExamples || []).map((ex, idx) => (
+                    <div key={ex.id || idx} className="p-4 rounded-xl bg-black/70 border border-gray-800 space-y-2.5 font-mono text-xs relative">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sfx.playWeapon();
+                          setLlmConfig((prev) => ({
+                            ...prev,
+                            trainingExamples: prev.trainingExamples.filter((_, i) => i !== idx),
+                          }));
+                        }}
+                        className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-950/60 border border-red-500/40 text-red-300 hover:bg-red-800 hover:text-white"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      <div className="pr-10">
+                        <label className="text-gray-400 text-[10px] block mb-1">RECRUITER QUESTION #{idx + 1}:</label>
+                        <input
+                          type="text"
+                          value={ex.question}
+                          onChange={(e) => {
+                            const updated = [...llmConfig.trainingExamples];
+                            updated[idx] = { ...updated[idx], question: e.target.value };
+                            setLlmConfig((prev) => ({ ...prev, trainingExamples: updated }));
+                          }}
+                          placeholder="e.g. What is your expected CTC?"
+                          className="w-full bg-black/80 border border-gray-800 rounded-lg px-3 py-1.5 text-cyan-300 outline-none focus:border-[#00f0ff]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-gray-400 text-[10px] block mb-1">IDEAL TRAINED ANSWER:</label>
+                        <textarea
+                          rows={2}
+                          value={ex.idealAnswer}
+                          onChange={(e) => {
+                            const updated = [...llmConfig.trainingExamples];
+                            updated[idx] = { ...updated[idx], idealAnswer: e.target.value };
+                            setLlmConfig((prev) => ({ ...prev, trainingExamples: updated }));
+                          }}
+                          placeholder="Ideal answer Lester should model..."
+                          className="w-full bg-black/80 border border-gray-800 rounded-lg p-2.5 text-gray-200 outline-none focus:border-[#ff2a85]"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live Test Sandbox */}
+              <div className="bg-black/70 border border-[#00f0ff]/40 p-5 rounded-2xl space-y-3 font-mono text-xs">
+                <div className="text-[#00f0ff] font-black uppercase flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#ff2a85]" />
+                  <span>LIVE FINE-TUNING SANDBOX (TEST BEFORE/AFTER SAVING)</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={llmTestQuestion}
+                    onChange={(e) => setLlmTestQuestion(e.target.value)}
+                    placeholder="Ask a test question..."
+                    className="flex-1 bg-black/80 border border-gray-700 rounded-xl px-3 py-2 text-white outline-none focus:border-[#00f0ff]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleTestLLM}
+                    disabled={isTestingLLM}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#ff2a85] to-[#7b00ff] text-white font-black flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{isTestingLLM ? "TESTING..." : "TEST LLM"}</span>
+                  </button>
+                </div>
+
+                {llmTestReply && (
+                  <div className="p-3.5 rounded-xl bg-[#0c0119] border border-emerald-500/40 text-gray-200 space-y-1.5">
+                    <div className="text-[10px] text-emerald-400 font-bold">
+                      MODEL RESPONSE ({llmTestSource || "live"}):
+                    </div>
+                    <p className="font-sans text-sm whitespace-pre-line">{llmTestReply}</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

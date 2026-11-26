@@ -73,11 +73,10 @@ export const WeaponWheelTab: React.FC = () => {
                 key={w.id}
                 type="button"
                 onClick={() => handleSelectWeapon(w)}
-                className={`cursor-pointer p-4 rounded-2xl glass-vice transition-all text-center border relative overflow-hidden group hover:-translate-y-1 ${
-                  isSelected
-                    ? "border-[#ff2a85] shadow-[0_0_25px_rgba(255,42,133,0.55)] ring-1 ring-[#ff2a85]/60"
-                    : "border-white/10 hover:border-[#00f0ff]/60"
-                }`}
+                className={`cursor-pointer p-4 rounded-2xl glass-vice transition-all text-center border relative overflow-hidden group hover:-translate-y-1 ${isSelected
+                  ? "border-[#ff2a85] shadow-[0_0_25px_rgba(255,42,133,0.55)] ring-1 ring-[#ff2a85]/60"
+                  : "border-white/10 hover:border-[#00f0ff]/60"
+                  }`}
               >
                 {isSelected && (
                   <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#ff2a85] animate-ping" />

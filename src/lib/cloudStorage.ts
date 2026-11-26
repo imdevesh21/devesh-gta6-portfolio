@@ -4,10 +4,12 @@ import defaultBlogs from "@/data/blogs.json";
 import defaultPortfolio from "@/data/portfolioData.json";
 import defaultPhotos from "@/data/photos.json";
 import defaultInquiries from "@/data/inquiries.json";
+import defaultLLMConfig from "@/data/llmConfig.json";
 import { BlogPost } from "@/types/blog";
 import { PortfolioData } from "@/types/portfolio";
 import { PhotoItem } from "@/types/photo";
 import { RecruiterInquiry } from "@/types/inquiry";
+import { LLMConfig } from "@/types/llm";
 import { Redis } from "@upstash/redis";
 
 // Check if Upstash Redis or Vercel KV environment variables are present
@@ -31,6 +33,7 @@ let memBlogs: BlogPost[] | null = null;
 let memPortfolio: PortfolioData | null = null;
 let memPhotos: PhotoItem[] | null = null;
 let memInquiries: RecruiterInquiry[] | null = null;
+let memLLMConfig: LLMConfig | null = null;
 
 const BLOGS_FILE_PATH = path.join(process.cwd(), "src", "data", "blogs.json");
 const TMP_BLOGS_PATH = path.join("/tmp", "blogs.json");
@@ -43,6 +46,9 @@ const TMP_PHOTOS_PATH = path.join("/tmp", "photos.json");
 
 const INQUIRIES_FILE_PATH = path.join(process.cwd(), "src", "data", "inquiries.json");
 const TMP_INQUIRIES_PATH = path.join("/tmp", "inquiries.json");
+
+const LLM_FILE_PATH = path.join(process.cwd(), "src", "data", "llmConfig.json");
+const TMP_LLM_PATH = path.join("/tmp", "llmConfig.json");
 
 /* =========================================================================
    1. BLOG STORAGE ENGINE
@@ -329,6 +335,79 @@ export async function saveInquiries(
     if (errCode === "EROFS" || errCode === "ENOENT") {
       try {
         await fs.writeFile(TMP_INQUIRIES_PATH, JSON.stringify(inquiries, null, 2), "utf-8");
+        return { success: true, storage: "serverless_tmp" };
+      } catch {
+        return { success: true, storage: "in_memory" };
+      }
+    }
+    throw fsErr;
+  }
+}
+
+/* =========================================================================
+   5. LLM TRAINING CONFIG STORAGE ENGINE
+   ========================================================================= */
+
+export async function getLLMConfig(): Promise<LLMConfig> {
+  if (redisClient) {
+    try {
+      const data = await redisClient.get<LLMConfig>("leonida_llm_config");
+      if (data && data.systemPrompt) return data;
+      await redisClient.set("leonida_llm_config", defaultLLMConfig);
+      return defaultLLMConfig as unknown as LLMConfig;
+    } catch (err) {
+      console.warn("Redis get LLM config error:", err);
+    }
+  }
+
+  if (memLLMConfig) return memLLMConfig;
+
+  try {
+    const tmpContent = await fs.readFile(TMP_LLM_PATH, "utf-8");
+    const parsed = JSON.parse(tmpContent);
+    if (parsed && parsed.systemPrompt) {
+      memLLMConfig = parsed;
+      return parsed;
+    }
+  } catch {}
+
+  try {
+    const fileContent = await fs.readFile(LLM_FILE_PATH, "utf-8");
+    const parsed = JSON.parse(fileContent);
+    memLLMConfig = parsed;
+    return parsed;
+  } catch {
+    memLLMConfig = defaultLLMConfig as unknown as LLMConfig;
+    return defaultLLMConfig as unknown as LLMConfig;
+  }
+}
+
+export async function saveLLMConfig(
+  config: LLMConfig
+): Promise<{ success: boolean; storage: string }> {
+  const withTimestamp: LLMConfig = {
+    ...config,
+    updatedAt: new Date().toISOString(),
+  };
+  memLLMConfig = withTimestamp;
+
+  if (redisClient) {
+    try {
+      await redisClient.set("leonida_llm_config", withTimestamp);
+      return { success: true, storage: "upstash_redis" };
+    } catch (err) {
+      console.warn("Redis set LLM config error:", err);
+    }
+  }
+
+  try {
+    await fs.writeFile(LLM_FILE_PATH, JSON.stringify(withTimestamp, null, 2), "utf-8");
+    return { success: true, storage: "local_disk" };
+  } catch (fsErr: unknown) {
+    const errCode = (fsErr as { code?: string })?.code;
+    if (errCode === "EROFS" || errCode === "ENOENT") {
+      try {
+        await fs.writeFile(TMP_LLM_PATH, JSON.stringify(withTimestamp, null, 2), "utf-8");
         return { success: true, storage: "serverless_tmp" };
       } catch {
         return { success: true, storage: "in_memory" };
