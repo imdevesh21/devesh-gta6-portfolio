@@ -12,7 +12,13 @@ export async function POST(req: NextRequest) {
     }
 
     const [data, savedConfig] = await Promise.all([getPortfolioData(), getLLMConfig()]);
-    const config = overrideConfig ? { ...savedConfig, ...overrideConfig } : savedConfig;
+    // Only allow overrideConfig when authorized with admin clearance header
+    const adminPinHeader = req.headers.get("x-admin-pin");
+    const expectedPin = process.env.ADMIN_PIN || "12487766";
+    const isAdminOverrideAllowed = Boolean(
+      overrideConfig && adminPinHeader && adminPinHeader === expectedPin
+    );
+    const config = isAdminOverrideAllowed ? { ...savedConfig, ...overrideConfig } : savedConfig;
     const p = data.profile;
     const lower = q.toLowerCase();
 

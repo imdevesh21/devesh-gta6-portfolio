@@ -216,7 +216,10 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/assistant", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-pin": MASTER_PIN,
+        },
         body: JSON.stringify({ question: llmTestQuestion, overrideConfig: llmConfig }),
       });
       const json = await res.json();
