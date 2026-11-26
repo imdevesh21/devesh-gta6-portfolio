@@ -22,6 +22,7 @@ export const LesterAssistant: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [voiceError, setVoiceError] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "bot",
@@ -56,15 +57,17 @@ export const LesterAssistant: React.FC = () => {
     } catch {}
   };
 
-  const toggleVoiceInput = () => {
+  const toggleVoiceInput = async () => {
     if (typeof window === "undefined") return;
+    setVoiceError("");
+
     const SpeechRec =
       (window as unknown as { SpeechRecognition?: new () => unknown; webkitSpeechRecognition?: new () => unknown })
         .SpeechRecognition ||
       (window as unknown as { webkitSpeechRecognition?: new () => unknown }).webkitSpeechRecognition;
 
     if (!SpeechRec) {
-      alert("Voice input is supported in Chrome / Edge browsers.");
+      setVoiceError("Voice input is only supported in Chrome / Edge.");
       return;
     }
 
@@ -73,51 +76,101 @@ export const LesterAssistant: React.FC = () => {
         recognitionRef.current?.stop();
       } catch {}
       setIsListening(false);
+      recognitionRef.current = null;
       return;
+    }
+
+    // Request mic permission explicitly first so browsers don't silently abort SpeechRecognition
+    if (navigator.mediaDevices?.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((t) => t.stop());
+      } catch {
+        setVoiceError("Mic permission denied. Allow microphone access in browser settings.");
+        return;
+      }
     }
 
     try {
       const rec = new SpeechRec() as {
         lang: string;
+        continuous: boolean;
         interimResults: boolean;
+        maxAlternatives: number;
+        onstart: () => void;
         onresult: (e: {
           results: ArrayLike<{ isFinal?: boolean; 0: { transcript: string } }>;
         }) => void;
-        onerror: () => void;
+        onerror: (e: { error?: string }) => void;
         onend: () => void;
         start: () => void;
         stop: () => void;
       };
       recognitionRef.current = rec;
       rec.lang = "en-US";
+      rec.continuous = true;
       rec.interimResults = true;
-      setIsListening(true);
-      sfx.playClick();
+      rec.maxAlternatives = 1;
+
+      let latestTranscript = "";
+      let sent = false;
+
+      rec.onstart = () => {
+        setIsListening(true);
+        setVoiceError("");
+      };
+
       rec.onresult = (event) => {
         const lastIdx = event.results.length - 1;
         const result = event.results?.[lastIdx];
-        const transcript = result?.[0]?.transcript || "";
+        const transcript = result?.[0]?.transcript?.trim() || "";
         if (!transcript) return;
 
+        latestTranscript = transcript;
         if (result.isFinal) {
+          sent = true;
+          try {
+            rec.stop();
+          } catch {}
           setInput("");
           askQuestion(transcript);
         } else {
           setInput(transcript);
         }
       };
-      rec.onerror = () => {
+
+      rec.onerror = (event) => {
+        const errCode = event?.error || "unknown";
+        if (errCode === "not-allowed" || errCode === "service-not-allowed") {
+          setVoiceError("Microphone / Speech service blocked by browser.");
+        } else if (errCode === "audio-capture") {
+          setVoiceError("No microphone detected on this device.");
+        } else if (errCode === "network") {
+          setVoiceError("Speech service network error (try Chrome on HTTPS).");
+        } else if (errCode === "no-speech") {
+          setVoiceError("No speech detected — tap mic and speak closer.");
+        } else if (errCode !== "aborted") {
+          setVoiceError(`Voice error: ${errCode}`);
+        }
         setIsListening(false);
         recognitionRef.current = null;
       };
+
       rec.onend = () => {
         setIsListening(false);
         recognitionRef.current = null;
+        if (!sent && latestTranscript) {
+          setInput("");
+          askQuestion(latestTranscript);
+        }
       };
+
+      setIsListening(true);
       rec.start();
     } catch {
       setIsListening(false);
       recognitionRef.current = null;
+      setVoiceError("Could not start microphone listener.");
     }
   };
 
@@ -259,6 +312,20 @@ export const LesterAssistant: React.FC = () => {
               </button>
             ))}
           </div>
+
+          {/* Voice Error Notice (if browser blocks mic/speech) */}
+          {voiceError && !isListening && (
+            <div className="px-3.5 py-1.5 bg-red-950/80 border-t border-red-500/40 text-[10px] font-mono text-red-300 flex items-center justify-between gap-2">
+              <span>⚠️ {voiceError}</span>
+              <button
+                type="button"
+                onClick={() => setVoiceError("")}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           {/* Live Voice Listening Indicator Banner */}
           {isListening && (
